@@ -1,0 +1,48 @@
+---
+title: "Loading WoS data"
+author: "Kristine"
+date: "27/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+###Stolen code from Assignment 4 semester 3 
+# Load the file
+  #Creating pattern for extracting file info
+pattern <- "Study(\\d+)_G(\\d+)_T(\\d+)_(\\w+)"
+  #Creating function to read file with pattern
+read_HR_test <- function(filename) {
+    # getting filenames and subsetting them
+    files = path_file(path = filename) 
+    
+    for (file in filename){
+    id_stuff <- str_match(filename, pattern) %>% 
+      as.data.frame() %>% 
+      dplyr::rename(
+        file = V1,
+        study = V2,
+        group = V3,
+        trial = V4,
+        type = V5
+      )
+    }
+    # creating dataframes, loading data and and merging the df's
+    #df = data_frame(title)
+    df1 = read_csv(filename)
+    data = merge(df1, id_stuff)
+    # combine all this data in one dataset
+    return(data)
+}
+#testing on only one file
+test_data = read_HR_test("data/Study1_G1_T1_Synchronous.csv")
+#Combining the three files to the test_data
+test_data <- list.files(path = './data', pattern = 'Study1_G1', all.files = T, full.names = T) %>% 
+    purrr::map_df(read_HR_test)
+
+```
+
