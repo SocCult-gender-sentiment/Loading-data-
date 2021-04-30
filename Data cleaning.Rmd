@@ -11,7 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 pacman::p_load(tidyverse,
+               dplyr,
                plyr,
+               stringr,
                readxl,
                purrr)
 
@@ -33,8 +35,137 @@ dat = lapply(data.list, function(i){
 
  df <- ldply (dat, data.frame)
 
+write_csv(df, "alldata.csv") 
 ```
 
 
+cleaning data
+We need to find:
+- first authors first name (Author.Full.Names)
+- last authors first name
+- papers where first author is for Asrhus university
+```{r}
+##extracting author names - only keep first name
+#Making columns for both
+dfnames <- df %>% 
+    mutate(
+      Author.First.Name = Author.Full.Names,
+      Author.Last.Name = Author.Full.Names)
 
+#extracting first and last author names - full names 
+dfnames1 <- dfnames %>%
+  mutate(
+    Author.First.Name = gsub(";.*", '', Author.First.Name),
+    Author.Last.Name = gsub(".*;", '', Author.Last.Name)
+  )
+#finding first name only
+# - first name is after comma
+dfnames1 <- dfnames1 %>%
+  mutate(
+    Author.First.Name = gsub(".*,", '', Author.First.Name),
+    Author.Last.Name = gsub(".*,", '', Author.Last.Name)
+  )
+#removing space in front of fint character
+dfnames1 <- dfnames1 %>%
+  mutate(
+    Author.First.Name = str_replace(Author.First.Name, " ", ""),
+    Author.Last.Name = str_replace(Author.Last.Name, " ", "")
+  )
+
+# - only keep one name (first name before space)
+dfnames1 <- dfnames1 %>%
+  mutate(
+    Author.First.Name = gsub(" .*", '', Author.First.Name),
+    Author.Last.Name = gsub(" .*", '', Author.Last.Name)
+  )
+
+#Now its time for genderize!
+
+
+#dfnames1 <- dfnames %>%
+#  mutate(
+#    Author.First.Name = str_extract(Author.First.Name, #pattern="[\\w]"),
+#    Author.Last.Name = str_extract(Author.Last.Name, #pattern="[\\w]")
+#  )
+
+
+
+#Det her virker men er ikke optimalt da nogle forfattere har flere fornavne
+#dfnames <- dfnames %>%
+#  mutate(
+#    Author.First.Name = word(Author.First.Name, 2),
+#    Author.Last.Name = word(Author.Last.Name, -2)
+#  )
+
+#dfnames <- dfnames %>%
+#  mutate(
+#    Author.First.Name = separate(Author.First.Name, #c("Author.First.Name", NA), sep="[;]"),
+#    Author.First.Name = separate(Author.First.Name, c(NA, #"Author.First.Name"), sep="[;]")
+#  )
+
+#str_locate_all(dfnames$Author.First.Name, ';')
+
+#dfnames <- dfnames %>%
+#  separate(Author.First.Name, c("Author.First.Name"), #sep="[;]")
+
+#dfnames <- dfnames %>% separate(Author.First.Name, #c(NA,"Author.First.Name", sep=" ")
+```
+
+Finding papers with first author from Aarhus university
+```{r}
+aarhuspapers <- dfnames1 %>%
+  mutate(
+    First.Author.University = gsub(".*]", '', Addresses)
+  )
+   
+aarhuspapers <- aarhuspapers %>%
+  mutate(
+    First.Author.University = str_replace(First.Author.University, " ", "")
+  ) 
+
+aarhuspapers <- aarhuspapers %>%
+  mutate(
+    First.Author.University = gsub(",.*", '', First.Author.University)
+  )
+
+#29154 observations
+#only papers from Aarhus university
+#aarhuspapersfactor <- aarhuspapers %>%
+#  mutate(
+#    First.Author.University = as.factor(First.Author.University)
+#  )
+#aarhuspapersfactor$First.Author.University
+
+#factor = 5098 universities
+
+aarhuspapers <- aarhuspapers %>%
+  dplyr::filter(First.Author.University == "Aarhus Univ")
+
+#9318 observations = papers form Aarhus uni 
+#note some papers might have used another wording for aarhus university e.g University Aarhus - these are not included as I only eyeballed 3 or something
+# Could also consider if we should include papers from Aarhus universit hospital
+```
+
+
+Variables to keep:
+- Article title
+- First author name
+- Last author name
+- Abstract
+- Citations (find den rigtige)
+- publication year
+- Research area (tror det er det tætteste we kommer på fakultet)
+
+```{r}
+
+```
+
+Define gender of first author and second author
+- using genderizeR
+- adding two new collumns
+```{r}
+
+```
+
+Save csv for BERT in Python
 
