@@ -5,6 +5,8 @@ date: "27/4/2021"
 output: html_document
 ---
 
+HEY KRIS. Du kan finde genderize i sidste chunk. Jeg er ikke 100 på at de virker endnu
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -15,7 +17,8 @@ pacman::p_load(tidyverse,
                plyr,
                stringr,
                readxl,
-               purrr)
+               purrr,
+               genderizeR)
 
 ```
 
@@ -157,13 +160,49 @@ Variables to keep:
 - Research area (tror det er det tætteste we kommer på fakultet)
 
 ```{r}
+newdf <- aarhuspapers %>%
+  subset(
+    select = c("Article.Title",
+               "Abstract",
+               "Cited.Reference.Count",
+               "Times.Cited..WoS.Core",
+               "Times.Cited..All.Databases",
+               "Since.2013.Usage.Count",
+               "Publisher",
+               "Publication.Year",
+               "WoS.Categories",
+               "Author.First.Name",
+               "Author.Last.Name",
+               "First.Author.University")
+  )
+
+write.csv(newdf, "cleandata.csv")
 
 ```
+
+KRISSSS 
 
 Define gender of first author and second author
 - using genderizeR
 - adding two new collumns
 ```{r}
+
+
+#firstnamegender
+givenNames <- findGivenNames(newdf$Author.First.Name, progress = FALSE)
+
+givenNames1 <- givenNames %>%
+    set_names(
+      "Author.First.Name" = "name",
+      "Author.First.Gender" = "gender",
+      "Author.First.Gender.Probability" = "probability",
+      "Author.First.Gender.Count" = "count",
+      "Author.First.Gender.CountryID" = "country_id"
+           )
+
+#merge the two dataframes by Author.First.Name
+
+#Do the same for Author.Last.Name
 
 ```
 
