@@ -19,6 +19,8 @@ pacman::p_load(tidyverse,
                readxl,
                purrr)
 
+library("dplyr")
+
 ```
 
 Loading all data
@@ -195,14 +197,26 @@ Define gender of first author and second author
 
 pacman::p_load("genderizeR")
 install.packages("devtools")
+install.packages(c("httr", "jsonlite"))
 devtools::install_github("hadley/devtools")
 
 devtools::install_github("kalimu/genderizeR")
-library("genderizeR", "tidyverse")
+library("genderizeR", "tidyverse", "httr", "jsonlite")
+library("httr")
+library("jsonlite")
 
-givenNames <- findGivenNames(newdf$Author.First.Name, progress = FALSE)
 
-givenNames <- givenNames %>% 
+#yet another try 
+#Nanna <- findGivenNames(newdf$Author.First.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10,progress = FALSE, ssl.verifypeer = FALSE)
+
+
+#Lastname_gender <- findGivenNames(newdf$Author.Last.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10, progress = FALSE, ssl.verifypeer = FALSE)
+
+
+
+
+
+firstname_gender <- Nanna %>% 
   mutate(
     name = as.character(name),
     gender = as.character(gender),
@@ -211,43 +225,73 @@ givenNames <- givenNames %>%
     country_id = as.character(country_id)
   )
 
-givenNames1 <- givenNames
+names(firstname_gender)[names(firstname_gender) == "name"] <- "Author.Last.Name"
+names(firstname_gender)[names(firstname_gender) == "gender"] <- "Author.Last.Gender"
+names(firstname_gender)[names(firstname_gender) == "probability"] <- "Author.Last.Gender.Probability"
+names(firstname_gender)[names(firstname_gender) == "count"] <- "Author.Last.Gender.Count"
+names(firstname_gender)[names(firstname_gender) == "country_id"] <- "Author.Last.Gender.Country_ID"
 
-names(givenNames1)[names(givenNames1) == "name"] <- "Author.First.Name"
-names(givenNames1)[names(givenNames1) == "gender"] <- "Author.First.Gender"
-names(givenNames1)[names(givenNames1) == "probability"] <- "Author.First.Gender.Probability"
-names(givenNames1)[names(givenNames1) == "count"] <- "Author.First.Gender.Count"
-names(givenNames1)[names(givenNames1) == "country_id"] <- "Author.First.Gender.Country_ID"
+firstname_gender <- firstname_gender %>% 
+  dplyr::rename(
+    Author.First.Name= name,
+    Author.First.Gender = gender,
+    Author.First.Gender.Probability = probability,
+    Author.First.Gender.Count = count,
+    Author.First.Gender.Country_ID = country_id
+  )
+
+Lastname_gender <- Lastname_gender %>% 
+  select(
+    Author.Last.Name,
+    Author.Last.Gender,
+    Author.Last.Gender.Probability,
+    Author.Last.Gender.Count,
+    Author.Last.Gender.Country_ID
+  )
+
+Lastname_gender <- Lastname_gender %>% 
+  mutate(
+    name = as.character(name),
+    gender = as.character(gender),
+    probability = as.numeric(probability),
+    count = as.numeric(count),
+    country_id = as.character(country_id)
+  )
+
+
+
+Lastname_gender <- Lastname_gender %>% 
+  dplyr::rename(
+    Author.Last.Name = name,
+    Author.Last.Gender = gender,
+    Author.Last.Gender.Probability = probability,
+    Author.Last.Gender.Count = count,
+    Author.Last.Gender.Country_ID = country_id
+  )
 
 
 
 #merge the two dataframes by Author.First.Name
+firstnew <- merge(newdf,firstname_gender, by = "Author.First.Name")
+
+#removing duplicates from the merge dataframe containing first author and newdf 
+singel <- firstnew %>% distinct(X,.keep_all = TRUE)
+#Removing duplicates 
+newdf$Article.Title[duplicated(newdf$Article.Title)]
+
+semifinaldf <- merge(singel,Lastname_gender, by = "Author.Last.Name")
 
 #Do the same for Author.Last.Name
-
-
-givenNamesLast <- findGivenNames(newdf$Author.Last.Name, progress = FALSE)
-
-givenNamesLast <- givenNamesLast %>% 
-  mutate(
-    name = as.character(name),
-    gender = as.character(gender),
-    probability = as.numeric(probability),
-    count = as.numeric(count),
-    country_id = as.character(country_id)
-  )
-
-givenNamesLast1 <- givenNamesLast
-
-names(givenNamesLast1)[names(givenNamesLast1) == "name"] <- "Author.Last.Name"
-names(givenNamesLast1)[names(givenNamesLast1) == "gender"] <- "Author.Last.Gender"
-names(givenNamesLast1)[names(givenNamesLast1) == "probability"] <- "Author.Last.Gender.Probability"
-names(givenNamesLast1)[names(givenNamesLast1) == "count"] <- "Author.Last.Gender.Count"
-names(givenNamesLast1)[names(givenNamesLast1) == "country_id"] <- "Author.Last.Gender.Country_ID"
 
 
 #merge the two dataframes by Author.Last.Name
 ```
 
 Save csv for BERT in Python
+
+```{r}
+
+
+
+```
 
