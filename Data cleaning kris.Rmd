@@ -270,18 +270,25 @@ Lastname_gender <- Lastname_gender %>%
   )
 
 
-
+rm(firstnew)
 #merge the two dataframes by Author.First.Name
 firstnew <- merge(newdf,firstname_gender, by = "Author.First.Name")
+#Removing dublicates
+firstnew <- firstnew %>% distinct(X,.keep_all = TRUE)
 
 #removing duplicates from the merge dataframe containing first author and newdf 
-singel <- firstnew %>% distinct(X,.keep_all = TRUE)
+#singel <- firstnew %>% distinct(X,.keep_all = TRUE)
 #Removing duplicates 
 newdf$Article.Title[duplicated(newdf$Article.Title)]
 
-semifinaldf <- merge(singel,Lastname_gender, by = "Author.Last.Name")
+semifinaldf <- merge(firstnew,Lastname_gender, by = "Author.Last.Name")
+
+#Removing dublicates
+semifinaldfdf <- semifinaldf %>% distinct(X,.keep_all = TRUE)
 
 #Do the same for Author.Last.Name
+
+
 
 
 #merge the two dataframes by Author.Last.Name
