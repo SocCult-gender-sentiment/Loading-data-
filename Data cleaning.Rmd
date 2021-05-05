@@ -158,8 +158,9 @@ newdf <- aarhuspapers %>%
                "Publisher",
                "Publication.Year",
                "WoS.Categories",
-               "Author.First.Name",
-               "Author.Last.Name",
+               "Research.Areas",
+               "First.Author.Name",
+               "Last.Author.Name",
                "First.Author.University")
   )
 
@@ -173,11 +174,13 @@ Define gender of first author and second author
 
 ```{r}
 
+#newdf <- read.csv("cleandata.csv")
+
 #Predicting first author gender 
-First.Author.Gender <- findGivenNames(newdf$Author.First.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10,progress = FALSE, ssl.verifypeer = FALSE)
+First.Author.Gender <- findGivenNames(newdf$First.Author.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10,progress = FALSE, ssl.verifypeer = FALSE)
 
 #Predicting last author gender
-Last.Authour.Gender <- findGivenNames(newdf$Author.Last.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10, progress = FALSE, ssl.verifypeer = FALSE)
+Last.Authour.Gender <- findGivenNames(newdf$Last.Author.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10, progress = FALSE, ssl.verifypeer = FALSE)
 
 
 #firstname_gender <- First.Author.Gender #%>% 
@@ -192,44 +195,112 @@ Last.Authour.Gender <- findGivenNames(newdf$Author.Last.Name, textPrepare = FALS
 #renaming variables first author
 First.Author.Gender <- First.Author.Gender %>% 
   dplyr::rename(
-    Author.First.Name= name,
-    Author.First.Gender = gender,
-    Author.First.Gender.Probability = probability,
-    Author.First.Gender.Count = count,
-    Author.First.Gender.Country_ID = country_id
+    First.Author.Name= name,
+    First.Author.Gender = gender,
+    First.Author.Gender.Probability = probability,
+    First.Author.Gender.Count = count,
+    First.Author.Gender.Country_ID = country_id
   )
 
 #renaming variables last author
-Lastname_gender <- Lastname_gender %>% 
+Last.Authour.Gender <- Last.Authour.Gender %>% 
   dplyr::rename(
-    Author.Last.Name = name,
-    Author.Last.Gender = gender,
-    Author.Last.Gender.Probability = probability,
-    Author.Last.Gender.Count = count,
-    Author.Last.Gender.Country_ID = country_id
+    Last.Author.Name = name,
+    Last.Author.Gender = gender,
+    Last.Author.Gender.Probability = probability,
+    Last.Author.Gender.Count = count,
+    Last.Author.Gender.Country_ID = country_id
   )
 
 
 #merging df with gender dataframe by Author.First.Name
-firstnew <- merge(newdf,firstname_gender, by = "Author.First.Name")
+firstnew <- merge(newdf,First.Author.Gender, by = "First.Author.Name")
 
 #Removing dublicates
-firstnew <- firstnew %>% distinct(X,.keep_all = TRUE)
+firstnew <- firstnew %>% distinct(Article.Title,.keep_all = TRUE)
 
-
-#Removing duplicates 
-newdf$Article.Title[duplicated(newdf$Article.Title)]
 
 #Merging df with last Author gender
-semifinaldf <- merge(firstnew,Lastname_gender, by = "Author.Last.Name")
+semifinaldf <- merge(firstnew,Last.Authour.Gender, by = "Last.Author.Name")
 
 #Removing dublicates
-semifinaldf <- semifinaldf %>% distinct(X,.keep_all = TRUE)
+semifinaldf <- semifinaldf %>% distinct(Article.Title,.keep_all = TRUE)
 
 
 #save csv 
-write.csv("semifinaldf.csv")
+write.csv(semifinaldf, "semifinaldf.csv")
 ```
 
 Save csv for BERT in Python
+
+Exploring the data
+```{r}
+
+semifinaldf <- read.csv("semifinaldf.csv")
+
+
+semifinaldf <- semifinaldf %>%
+  mutate(
+    WoS.Categories = as.factor(WoS.Categories),
+    Research.Areas = as.factor(Research.Areas),
+    First.Author.Gender = as.factor(First.Author.Gender),
+    Last.Author.Gender = as.factor(Last.Author.Gender)
+  )
+
+semifinaldf <- semifinaldf %>% filter(!is.na(Abstract))
+
+write.csv(semifinaldf, "semifinaldf.csv")
+
+semifinaldf <- semifinaldf %>%
+  mutate(
+    Research.Areas = gsub(";.*", '', Research.Areas)
+  )
+
+semifinaldf <- semifinaldf %>%
+  mutate(
+    Research.Areas = gsub(",.*", '', Research.Areas)
+  )
+
+semifinaldf <- semifinaldf %>%
+  mutate(
+    Research.Areas = gsub("&.*", '', Research.Areas)
+  )
+
+#How many papers do we have?
+
+
+#How is the gender distribution in general (first author)?
+
+ggplot(semifinaldf, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
+
+
+#How is the gender distribution in general (last author)?
+
+ggplot(semifinaldf, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
+
+#How is the gender distribution in years (first author)?
+
+
+#How is the gender distribution in years (last author)?
+
+#Abstract lengths of characters
+
+lengt_words <- sapply(strsplit(semifinaldf$Abstract, " "), length)
+range(lengt_words)
+lengt_words
+
+
+
+#Abstract sentences 
+
+#WoS.Categories 
+
+
+
+ggplot(semifinaldf, aes(Research.Areas, fill = Research.Areas)) + geom_bar()
+
+
+
+
+```
 
