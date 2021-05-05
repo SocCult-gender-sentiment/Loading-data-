@@ -249,7 +249,7 @@ semifinaldf <- semifinaldf %>%
 
 semifinaldf <- semifinaldf %>% filter(!is.na(Abstract))
 
-write.csv(semifinaldf, "semifinaldf.csv")
+
 
 semifinaldf <- semifinaldf %>%
   mutate(
@@ -266,40 +266,9 @@ semifinaldf <- semifinaldf %>%
     Research.Areas = gsub("&.*", '', Research.Areas)
   )
 
-#How many papers do we have?
 
 
-#How is the gender distribution in general (first author)?
-
-ggplot(semifinaldf, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
-
-
-#How is the gender distribution in general (last author)?
-
-ggplot(semifinaldf, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
-
-#How is the gender distribution in years (first author)?
-
-
-#How is the gender distribution in years (last author)?
-
-#Abstract lengths of characters
-
-lengt_words <- sapply(strsplit(semifinaldf$Abstract, " "), length)
-range(lengt_words)
-lengt_words
-
-
-
-#Abstract sentences 
-
-#WoS.Categories 
-
-
-
-ggplot(semifinaldf, aes(Research.Areas, fill = Research.Areas)) + geom_bar()
-
-
+write.csv(semifinaldf, "semifinaldf.csv")
 
 
 ```
