@@ -1,0 +1,128 @@
+---
+title: "Exploring"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading packages 
+pacman::p_load(tidyverse,
+               dplyr,
+               plyr,
+               stringr,
+               readxl,
+               purrr,
+               koRpus,
+               readxl)
+
+
+
+```
+
+```{r}
+#Loading the "clean" data with NA removed and summarized areas of research 
+
+df <- read_csv("semifinaldf.csv")
+
+#Removing extra (X) columns from download 
+#df <- df[, -c(1:2)] #delete column 5
+
+```
+
+```{r}
+#Exploring our data 
+
+#How many papers do we have?
+# We have 8157 Articles 
+
+length(df$Article.Title) 
+
+#How is the gender distribution in general (first author)?
+
+ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
+
+
+#How is the gender distribution in general (last author)?
+#Comment for the plot. it is interesting to see that there is a lot more male last authors, indicating that many of the head of departments are male. There is an increase in male last authors compared to male first authors and the female authors is in outnumbered in both conditions. 
+
+ggplot(df, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
+
+#How is the gender distribution in years (first author)?
+#these plots would be more informative if the bars were placed next to eachother, but I dont know how to do that, without specifying a y-axis. 
+
+ggplot(df, aes(Publication.Year, fill = First.Author.Gender)) + geom_bar()
+
+
+#How is the gender distribution in years (last author)?
+
+ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) + 
+  geom_bar()
+  
+  
+
+#Abstract lengths of characters
+#We have abstracts with a total of 8 words and a abstract with 922 words. 
+
+library(stringr)
+library(dplyr)
+df_with_wordcount <- df %>% 
+  mutate(wordcount = str_count(df$Abstract, pattern = "\\w+"))
+#Not sure i understand the regular expressions . and my choice of those influences teh word count. I see that, because the length_words and the df_with_wordcount are not identical. 
+
+length_words <- sapply(strsplit(df$Abstract, " "), length)
+
+#we have abstracts with 8 words and 922/939 words 
+range(length_words)
+range(df_with_wordcount$wordcount)
+
+#The histohgram shows the distribution of abstranct lengths - shows that it makes sense to have a max length of 500 for our SciBert
+ggplot(df_with_wordcount, aes(x = as.numeric(wordcount)))+
+  geom_histogram(aes(y=..density..))
+
+#Abstract sentences 
+#We are moving into the realm of NLP maybe we should leave that for Python :-) 
+
+##Research areas  
+#Subsetting the research areas so only the first mentioned area is kept
+
+df <- df %>%
+  mutate(
+    Research.Areas = gsub(";.*", '', Research.Areas)
+  )
+
+df <- df %>%
+  mutate(
+    Research.Areas = gsub(",.*", '', Research.Areas)
+  )
+
+df <- df %>%
+  mutate(
+    Research.Areas = gsub("&.*", '', Research.Areas)
+  )
+
+df$Research.Areas <- as.factor(df$Research.Areas)
+levels(df$Research.Areas)
+
+#We still have 142 different categories, which would like to seperate into departments. 
+
+Area_df <- df %>% select(Research.Areas )
+
+Area_df <- unique(Area_df, incomparables = FALSE)
+Area_df <- Area_df %>% filter(!is.na(Research.Areas))
+
+write_csv(Area_df, "Area_of_research.csv") 
+
+df2 <- read_delim("Area_of_research_2.csv", delim = ";", col_names = TRUE,col_types = NULL)
+
+#The df2 now contains a specification of which faculty each Area of Research has.
+
+#Plan man 
+# - Make R tell me which Areas are within each faculties and then create ifelse statements to concattenate a faculty to each Area of Research in the df - so all 8157 papers. 
+
+ggplot(semifinaldf, aes(Research.Areas, fill = Research.Areas)) + geom_bar()
+
+```
+

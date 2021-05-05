@@ -17,7 +17,8 @@ pacman::p_load(tidyverse,
                plyr,
                stringr,
                readxl,
-               purrr)
+               purrr,
+               )
 
 library("dplyr")
 
