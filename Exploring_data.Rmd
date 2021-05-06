@@ -2,6 +2,8 @@
 title: "Exploring"
 output: html_document
 ---
+#### WARNING ######
+The documnet is extremly messy and the code is anything but elegant - I think Riccardo would poke his eyes out if he ever sees this... sry 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -70,7 +72,7 @@ library(stringr)
 library(dplyr)
 df_with_wordcount <- df %>% 
   mutate(wordcount = str_count(df$Abstract, pattern = "\\w+"))
-#Not sure i understand the regular expressions . and my choice of those influences teh word count. I see that, because the length_words and the df_with_wordcount are not identical. 
+#Not sure i understand the regular expressions . and my choice of those influences the word count. I see that, because the length_words and the df_with_wordcount are not identical. 
 
 length_words <- sapply(strsplit(df$Abstract, " "), length)
 
@@ -86,6 +88,15 @@ ggplot(df_with_wordcount, aes(x = as.numeric(wordcount)))+
 #We are moving into the realm of NLP maybe we should leave that for Python :-) 
 
 ##Research areas  
+#The plot shows that we almost only have papers from the faculty of Health and basically non for faculty of technical sciences (Can that be true?)
+#Would be possible to make some cool plots with gender ditribution within each faculty.
+
+ggplot(df_test, aes(x = Faculty, fill = Faculty)) + 
+  geom_bar()
+
+df_test$Faculty <- as.factor(df_test$Faculty)
+
+
 #Subsetting the research areas so only the first mentioned area is kept
 
 df <- df %>%
@@ -122,7 +133,196 @@ df2 <- read_delim("Area_of_research_2.csv", delim = ";", col_names = TRUE,col_ty
 #Plan man 
 # - Make R tell me which Areas are within each faculties and then create ifelse statements to concattenate a faculty to each Area of Research in the df - so all 8157 papers. 
 
-ggplot(semifinaldf, aes(Research.Areas, fill = Research.Areas)) + geom_bar()
+#No idea why the renaming does not work 
+names(df2)[names(df2) == "`Faculty `"] <- "Faculty"
+names(df2)[names(df2) == "`Area `"] <- "Area"
 
+#the plot shows how I have seperated reserach areas into faculties       
+ggplot(df2, aes(`Faculty `, fill= `Faculty `))+ geom_bar()
+
+#making a df for each faculty just to investigater which Research areas are in which faculty
+df_arts <- df2 %>% filter(`Faculty `== "a")
+df_bss <- df2 %>% filter(`Faculty `== "b")
+df_health <- df2 %>% filter(`Faculty `== "h")
+df_natural <- df2 %>% filter(`Faculty `== "n")
+df_tech <- df2 %>% filter(`Faculty `== "t")
+
+
+#Create a new column in df where faculty should be listed - I created df test 
+
+df_test <- df 
+df_arts
+
+df_test <- mutate(df_test, faculty_a = ifelse(Research.Areas== "Religion" 
+                                            |Research.Areas == "Anthropology"|Research.Areas == "Area Studies" 
+                                            |Research.Areas == "Public Administarion"
+                                            |Research.Areas == "Cultural studies" 
+                                            |Research.Areas == "Communication"
+                                            |Research.Areas == "Philosophy"
+                                            |Research.Areas == "Education"
+                                            |Research.Areas == "Linguistics" 
+                                            |Research.Areas == "Social Sciences - Other Topics"
+                                            |Research.Areas == "History"
+                                            |Research.Areas == "Mathematical Methods In Social Sciences"
+                                            |Research.Areas == "Art" 
+                                            |Research.Areas == "Film"
+                                            |Research.Areas == "Ethnic studies"
+                                            |Research.Areas == "Instruments" 
+                                            |Research.Areas == "Music"
+                                            |Research.Areas == "Literature"
+                                            |Research.Areas == "Theater" 
+                                            |Research.Areas == "Socail Issues"
+                                            |Research.Areas == "Sociology"
+                                            |Research.Areas == "History" 
+                                            |Research.Areas == "Archaeology"
+                                            |Research.Areas == "Information Sciences"
+                                            |Research.Areas == "Arts" 
+                                            |Research.Areas == "Classics"
+                                            |Research.Areas == "Women's Studies"
+                                            |Research.Areas == "Asian Studies", 'a', ''))
+
+df_bss
+
+df_test <- mutate(df_test, faculty_b = ifelse(Research.Areas== "Business"
+                          |Research.Areas == "Government"
+                          |Research.Areas == "Behavioral Sciences" 
+                                            |Research.Areas == "Materials Science"
+                                            |Research.Areas == "Psychology"
+                                            |Research.Areas == "Public" 
+                                            |Research.Areas == "Demography"
+                                            |Research.Areas == "Criminology"
+                                            |Research.Areas == "Development Studies"
+                                            |Research.Areas == "Substance Abuse"
+                                            |Research.Areas == "Family Studies"
+                                            |Research.Areas == "Social Work"
+                                            |Research.Areas == "Urban Studies", 'b', ''))
+
+df_natural
+
+df_test <- mutate(df_test, faculty_n = ifelse(Research.Areas== "Chemistry"
+                                            |Research.Areas == "Elctrochemistry"
+                                            |Research.Areas == "Geology" 
+                                            |Research.Areas == "Plant Sciences"
+                                            |Research.Areas == "Genetics"
+                                            |Research.Areas == "Science" 
+                                            |Research.Areas == "Microbiology"
+                                            |Research.Areas == "Physics"
+                                            |Research.Areas == "Research"
+                                            |Research.Areas == "Polymer Science"
+                                            |Research.Areas == "Astronomy"
+                                            |Research.Areas == "Physical Geography"
+                                            |Research.Areas == "Computer Science" 
+                                            |Research.Areas == "Marine"
+                                            |Research.Areas == "Biodiversity" 
+                                            |Research.Areas == "Construction"
+                                            |Research.Areas == "Meteorology"
+                                            |Research.Areas == "Energy"
+                                            |Research.Areas == "Mathematics"
+                                            |Research.Areas == "Biotechnology"
+                                            |Research.Areas == "Physical Geography"
+                                            |Research.Areas == "Mycology"
+                                            |Research.Areas == "Geography"
+                                            |Research.Areas == "Cell Biology"
+                                            |Research.Areas == "Oceanography" 
+                                            |Research.Areas == "Evolutionary Biology"
+                                            |Research.Areas == "Thermodynamics"
+                                            |Research.Areas == "Mathematical"
+                                            |Research.Areas == "Nuclear Science"
+                                            |Research.Areas == "Developmental Biology"
+                                            |Research.Areas == "Reproductive Biology"
+                                            |Research.Areas == "Imaging Science"
+                                            |Research.Areas == "Crystalllography",
+                                            'n', ''))
+
+df_tech
+
+df_test <- mutate(df_test, faculty_t = ifelse(Research.Areas== "Biohemistry"
+                                            |Research.Areas == "Forestry"	
+                                            |Research.Areas == "Telecommunications" 
+                                            |Research.Areas == "Agriculture"
+                                            |Research.Areas == "Environmental Sciences"
+                                            |Research.Areas == "Engineering"			
+                                            |Research.Areas == "Life Sciences"
+                                            |Research.Areas == "Geochemistry"
+                                            |Research.Areas == "Zoology"
+                                            |Research.Areas == "Veterinary Sciences"
+                                            |Research.Areas == "Entomology"
+                                            |Research.Areas == "Nutrition"
+                                            |Research.Areas == "Mechanics" 
+                                            |Research.Areas == "Food Science"
+                                            |Research.Areas == "Automation" 
+                                            |Research.Areas == "Fisheries"
+                                            |Research.Areas == "Biophysics"
+                                            |Research.Areas == "Remote Sensing"
+                                            |Research.Areas == "Acoustics"
+                                            |Research.Areas == "Robotics"
+                                            |Research.Areas == "Water Resources"
+                                            |Research.Areas == "Architecture",
+                                            't', ''))
+
+
+
+df_test <- df_test %>%  unite("Faculty1", faculty_t:faculty_a, remove = FALSE)
+
+df_test <- df_test %>%  unite("Faculty2", faculty_n:faculty_b, remove = FALSE)
+
+df_test <- df_test %>%  unite("Faculty", Faculty1:Faculty2, remove = FALSE)
+
+#removing columns we don't need 
+df_test <- df_test[, -c(23:28)] 
+
+#Clean the Faculty column
+
+df_test <- df_test %>%
+  mutate(
+    Faculty = str_replace_all(Faculty, "_", "")
+   )
+
+df_test <- df_test %>%
+  mutate(
+    Faculty = substring(Faculty, "2", "2")
+   )
+
+
+df_test <- mutate(df_test, Facultyfinal = ifelse(Faculty == "",
+                                            'h', ''))
+
+df_test <- df_test %>%  unite("Faculty", Faculty:Facultyfinal, remove = FALSE)
+
+df_test <- df_test %>%
+  mutate(
+    Faculty = str_replace_all(Faculty, "_", "")
+   )
+
+
+#removing columns we don't need 
+df_test <- df_test[, -23] 
+
+#How the fuck did t turn into A?
+df_test$Faculty <- as.factor(df_test$Faculty)
+levels(df_test$Faculty)
+
+df_test <- df_test %>%
+  mutate(
+    Faculty = str_replace_all(Faculty, "A", "t")
+   )
+```
+
+
+
+
+###Trying to make the Kix thing work - but can't... cry
+
+
+```{r}
+
+#Does not WORK
+df$Abstract <- as.character(df$Abstract)
+sample_df <- df %>% subset(Last.Author.Name == Adam & Last.Author.Name == Adelio)
+
+sample_df <- df %>%
+  dplyr::filter(Last.Author.Name == "Adam")
+
+lix_df <- sample_df %>% readability.num(sample_df$Abstract = list, parameters = c(char = 6, const = 1000) )
 ```
 
