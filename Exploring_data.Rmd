@@ -91,12 +91,18 @@ ggplot(df_with_wordcount, aes(x = as.numeric(wordcount)))+
 #The plot shows that we almost only have papers from the faculty of Health and basically non for faculty of technical sciences (Can that be true?)
 #Would be possible to make some cool plots with gender ditribution within each faculty.
 
-ggplot(df_test, aes(x = Faculty, fill = Faculty)) + 
+df<- read_csv("df_w_faculty.csv")
+
+ggplot(df, aes(x = Faculty, fill = Faculty)) + 
   geom_bar()
 
-df_test$Faculty <- as.factor(df_test$Faculty)
 
+```
 
+```{r}
+
+###MESSY DATA CLEANING TO ASSIGN EACH RESEARCH AREA TO A FACULTY. 
+##Dont run this again - just load the df_w_faculty.csv - it has been cleaned 
 #Subsetting the research areas so only the first mentioned area is kept
 
 df <- df %>%
@@ -117,7 +123,7 @@ df <- df %>%
 df$Research.Areas <- as.factor(df$Research.Areas)
 levels(df$Research.Areas)
 
-#We still have 142 different categories, which would like to seperate into departments. 
+#We still have 142 different categories, which would like to seperate into Faculties. 
 
 Area_df <- df %>% select(Research.Areas )
 
@@ -130,9 +136,6 @@ df2 <- read_delim("Area_of_research_2.csv", delim = ";", col_names = TRUE,col_ty
 
 #The df2 now contains a specification of which faculty each Area of Research has.
 
-#Plan man 
-# - Make R tell me which Areas are within each faculties and then create ifelse statements to concattenate a faculty to each Area of Research in the df - so all 8157 papers. 
-
 #No idea why the renaming does not work 
 names(df2)[names(df2) == "`Faculty `"] <- "Faculty"
 names(df2)[names(df2) == "`Area `"] <- "Area"
@@ -140,7 +143,7 @@ names(df2)[names(df2) == "`Area `"] <- "Area"
 #the plot shows how I have seperated reserach areas into faculties       
 ggplot(df2, aes(`Faculty `, fill= `Faculty `))+ geom_bar()
 
-#making a df for each faculty just to investigater which Research areas are in which faculty
+#making a df for each faculty just to investigte which Research areas are in which faculty
 df_arts <- df2 %>% filter(`Faculty `== "a")
 df_bss <- df2 %>% filter(`Faculty `== "b")
 df_health <- df2 %>% filter(`Faculty `== "h")
@@ -148,7 +151,7 @@ df_natural <- df2 %>% filter(`Faculty `== "n")
 df_tech <- df2 %>% filter(`Faculty `== "t")
 
 
-#Create a new column in df where faculty should be listed - I created df test 
+#Create a new column in df where faculty should be listed - I created df test to ensure im not messing with our so far clean data 
 
 df_test <- df 
 df_arts
@@ -261,7 +264,7 @@ df_test <- mutate(df_test, faculty_t = ifelse(Research.Areas== "Biohemistry"
                                             't', ''))
 
 
-
+#The different faculty columns are combined into one. 
 df_test <- df_test %>%  unite("Faculty1", faculty_t:faculty_a, remove = FALSE)
 
 df_test <- df_test %>%  unite("Faculty2", faculty_n:faculty_b, remove = FALSE)
@@ -271,7 +274,7 @@ df_test <- df_test %>%  unite("Faculty", Faculty1:Faculty2, remove = FALSE)
 #removing columns we don't need 
 df_test <- df_test[, -c(23:28)] 
 
-#Clean the Faculty column
+#Clean the Faculty column - that is messy after using the unite function
 
 df_test <- df_test %>%
   mutate(
@@ -283,12 +286,13 @@ df_test <- df_test %>%
     Faculty = substring(Faculty, "2", "2")
    )
 
-
+#Adding the faculty h (health) on all the Articles that haven't been assigned another faculty. 
 df_test <- mutate(df_test, Facultyfinal = ifelse(Faculty == "",
                                             'h', ''))
-
+#combining the two faculty columns 
 df_test <- df_test %>%  unite("Faculty", Faculty:Facultyfinal, remove = FALSE)
 
+#Cleaning the Faculty column after the unite function 
 df_test <- df_test %>%
   mutate(
     Faculty = str_replace_all(Faculty, "_", "")
@@ -302,13 +306,40 @@ df_test <- df_test[, -23]
 df_test$Faculty <- as.factor(df_test$Faculty)
 levels(df_test$Faculty)
 
+#Fixing the A problem 
 df_test <- df_test %>%
   mutate(
     Faculty = str_replace_all(Faculty, "A", "t")
    )
+
+#Write csv so we don't have to run this mess again
+
+write_csv(df_test, "df_w_faculty.csv") 
+
+
 ```
 
+```{r}
+#Do we have the gender of all Authors - and how sure was Genderize 
 
+df <- read_csv("df_w_faculty.csv")
+ggplot(df, aes(x = as.numeric(First.Author.Gender.Probability)))+
+  geom_histogram(aes(y=..density..))
+
+ggplot(df_gender_last, aes(x = as.numeric(Last.Author.Gender.Probability)))+
+  geom_histogram(aes(y=..density..))
+
+#QUOESTION- should we remove the papers where genderize isn't super sure? 
+#Remember that just because it is unsure aboyt first author gender then it isn't unsure about last author, so a lot of data we are possibly throwing away. Don't know if we should eyeball some of teh names that it is unsure about at check if we agree with the gender it has assigned. Alot of the names are danish anyhow. Okay it also has a hard time on Asian names - in Roberta's paper they actually remove the Asian Authors because the genderize isn't good enough. And i can see that it classifies Andrea as male, Janne as male and Kim as female just as an example. 
+
+#df_gender_last <- df %>% filter(Last.Author.Gender.Probability < 0.70)
+
+df_gender_last <- df_gender_last %>% select(c(Last.Author.Name, Last.Author.Gender.Probability,Last.Author.Gender))
+
+#df_gender_first <- df %>% filter(First.Author.Gender.Probability < 0.70)
+
+df_gender_first <- df_gender_first %>% select(c(First.Author.Name, First.Author.Gender.Probability,First.Author.Gender))
+```
 
 
 ###Trying to make the Kix thing work - but can't... cry
