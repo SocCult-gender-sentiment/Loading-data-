@@ -332,3 +332,13 @@ df<-read_csv("df_ready_BERT.csv")
 
 ```
 
+```{r}
+#calulate lix - must first extract number of words, number of spaces and number of words 7 letters or longer
+lix <- function(n_words, n_breaks, n_longwords){
+  lix <- (n_words / n_breaks) + ((n_longwords * 100) / n_words)
+  return(lix)
+}
+
+lix(500,480,98)
+```
+
