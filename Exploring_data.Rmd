@@ -32,83 +32,11 @@ df <- read_csv("semifinaldf.csv")
 #Removing extra (X) columns from download 
 #df <- df[, -c(1:2)] #delete column 5
 
-```
-
-```{r}
-#Exploring our data 
-
-#How many papers do we have?
-# We have 8157 Articles 
-
-length(df$Article.Title) 
-
-#How is the gender distribution in general (first author)?
-
-ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
-
-
-#How is the gender distribution in general (last author)?
-#Comment for the plot. it is interesting to see that there is a lot more male last authors, indicating that many of the head of departments are male. There is an increase in male last authors compared to male first authors and the female authors is in outnumbered in both conditions. 
-
-ggplot(df, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
-
-#How is the gender distribution in years (first author)?
-#these plots would be more informative if the bars were placed next to eachother, but I dont know how to do that, without specifying a y-axis. 
-
-ggplot(df, aes(Publication.Year, fill = First.Author.Gender)) + geom_bar()
-
-
-#How is the gender distribution in years (last author)?
-
-ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) + 
-  geom_bar()
-  
-  
-
-#Abstract lengths of characters
-#We have abstracts with a total of 8 words and a abstract with 922 words. 
-
-library(stringr)
-library(dplyr)
-df <- df %>% 
-  mutate(wordcount = str_count(df$Abstract, pattern = "\\w+"))
-#Not sure i understand the regular expressions . and my choice of those influences the word count. I see that, because the length_words and the df_with_wordcount are not identical. 
-
-length_words <- sapply(strsplit(df$Abstract, " "), length)
-
-#we have abstracts with 8 words and 922/939 words 
-range(length_words)
-range(df$wordcount)
-
-#The histohgram shows the distribution of abstranct lengths - shows that it makes sense to have a max length of 500 for our SciBert
-ggplot(df_with_wordcount, aes(x = as.numeric(wordcount)))+
-  geom_histogram(aes(y=..density..))
-#Super thin tail on our distribution - so we remove articles with more than 500 words. 
-#We must remove the abstracts that have a word count higher than 500 
-
-df <- df %>% filter(wordcount< 500)
-
-#Abstract sentences 
-#We are moving into the realm of NLP maybe we should leave that for Python :-) 
-
-##Research areas  
-#The plot shows that we almost only have papers from the faculty of Health and basically non for faculty of technical sciences (Can that be true?)
-#Would be possible to make some cool plots with gender ditribution within each faculty.
-
-df<- read_csv("df_w_faculty.csv")
-
-ggplot(df, aes(x = Faculty, fill = Faculty)) + 
-  geom_bar()
-
-write_csv(df, "df_ready_BERT.csv") 
 
 ```
 
 ```{r}
-
-###MESSY DATA CLEANING TO ASSIGN EACH RESEARCH AREA TO A FACULTY. 
-##Dont run this again - just load the df_w_faculty.csv - it has been cleaned 
-#Subsetting the research areas so only the first mentioned area is kept
+#Subseting the research areas so only the first mentioned area is kept
 
 df <- df %>%
   mutate(
@@ -147,21 +75,21 @@ names(df2)[names(df2) == "`Area `"] <- "Area"
 
 #the plot shows how I have seperated reserach areas into faculties       
 ggplot(df2, aes(`Faculty `, fill= `Faculty `))+ geom_bar()
+```
 
-#making a df for each faculty just to investigte which Research areas are in which faculty
-df_arts <- df2 %>% filter(`Faculty `== "a")
-df_bss <- df2 %>% filter(`Faculty `== "b")
-df_health <- df2 %>% filter(`Faculty `== "h")
-df_natural <- df2 %>% filter(`Faculty `== "n")
-df_tech <- df2 %>% filter(`Faculty `== "t")
+
+```{r}
+#Further data cleaning to assign faculty to each research area 
+
+###MESSY DATA CLEANING TO ASSIGN EACH RESEARCH AREA TO A FACULTY. 
+##Dont run this again - just load the df_w_faculty.csv - it has been cleaned 
 
 
 #Create a new column in df where faculty should be listed - I created df test to ensure im not messing with our so far clean data 
 
 df_test <- df 
-df_arts
 
-df_test <- mutate(df_test, faculty_a = ifelse(Research.Areas== "Religion" 
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Religion" 
                                             |Research.Areas == "Anthropology"|Research.Areas == "Area Studies" 
                                             |Research.Areas == "Public Administarion"
                                             |Research.Areas == "Cultural studies" 
@@ -187,11 +115,10 @@ df_test <- mutate(df_test, faculty_a = ifelse(Research.Areas== "Religion"
                                             |Research.Areas == "Arts" 
                                             |Research.Areas == "Classics"
                                             |Research.Areas == "Women's Studies"
-                                            |Research.Areas == "Asian Studies", 'a', ''))
+                                            |Research.Areas == "Asian Studies", 'a', ""))
 
-df_bss
 
-df_test <- mutate(df_test, faculty_b = ifelse(Research.Areas== "Business"
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Business"
                           |Research.Areas == "Government"
                           |Research.Areas == "Behavioral Sciences" 
                                             |Research.Areas == "Materials Science"
@@ -203,11 +130,10 @@ df_test <- mutate(df_test, faculty_b = ifelse(Research.Areas== "Business"
                                             |Research.Areas == "Substance Abuse"
                                             |Research.Areas == "Family Studies"
                                             |Research.Areas == "Social Work"
-                                            |Research.Areas == "Urban Studies", 'b', ''))
+                                            |Research.Areas == "Urban Studies", 'b', Faculty))
 
-df_natural
 
-df_test <- mutate(df_test, faculty_n = ifelse(Research.Areas== "Chemistry"
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Chemistry"
                                             |Research.Areas == "Elctrochemistry"
                                             |Research.Areas == "Geology" 
                                             |Research.Areas == "Plant Sciences"
@@ -240,11 +166,10 @@ df_test <- mutate(df_test, faculty_n = ifelse(Research.Areas== "Chemistry"
                                             |Research.Areas == "Reproductive Biology"
                                             |Research.Areas == "Imaging Science"
                                             |Research.Areas == "Crystalllography",
-                                            'n', ''))
+                                            'n', Faculty))
 
-df_tech
 
-df_test <- mutate(df_test, faculty_t = ifelse(Research.Areas== "Biohemistry"
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Biohemistry"
                                             |Research.Areas == "Forestry"	
                                             |Research.Areas == "Telecommunications" 
                                             |Research.Areas == "Agriculture"
@@ -266,68 +191,27 @@ df_test <- mutate(df_test, faculty_t = ifelse(Research.Areas== "Biohemistry"
                                             |Research.Areas == "Robotics"
                                             |Research.Areas == "Water Resources"
                                             |Research.Areas == "Architecture",
-                                            't', ''))
-
-
-#The different faculty columns are combined into one. 
-df_test <- df_test %>%  unite("Faculty1", faculty_t:faculty_a, remove = FALSE)
-
-df_test <- df_test %>%  unite("Faculty2", faculty_n:faculty_b, remove = FALSE)
-
-df_test <- df_test %>%  unite("Faculty", Faculty1:Faculty2, remove = FALSE)
-
-#removing columns we don't need 
-df_test <- df_test[, -c(23:28)] 
-
-#Clean the Faculty column - that is messy after using the unite function
-
-df_test <- df_test %>%
-  mutate(
-    Faculty = str_replace_all(Faculty, "_", "")
-   )
-
-df_test <- df_test %>%
-  mutate(
-    Faculty = substring(Faculty, "2", "2")
-   )
+                                            't', Faculty))
 
 #Adding the faculty h (health) on all the Articles that haven't been assigned another faculty. 
-df_test <- mutate(df_test, Facultyfinal = ifelse(Faculty == "",
-                                            'h', ''))
-#combining the two faculty columns 
-df_test <- df_test %>%  unite("Faculty", Faculty:Facultyfinal, remove = FALSE)
-
-#Cleaning the Faculty column after the unite function 
-df_test <- df_test %>%
-  mutate(
-    Faculty = str_replace_all(Faculty, "_", "")
-   )
+df_test <- mutate(df_test, Faculty = ifelse(Faculty == "",
+                                            'h', Faculty))
 
 
-#removing columns we don't need 
-df_test <- df_test[, -23] 
-
-#How the fuck did t turn into A?
-df_test$Faculty <- as.factor(df_test$Faculty)
-levels(df_test$Faculty)
-
-#Fixing the A problem 
-df_test <- df_test %>%
-  mutate(
-    Faculty = str_replace_all(Faculty, "A", "t")
-   )
 
 #Write csv so we don't have to run this mess again
 
 write_csv(df_test, "df_w_faculty.csv") 
 
-
 ```
 
+
 ```{r}
+#Replacing Author Names that were not genderindentified with a probability above 0.7 with NA 
+
 #Do we have the gender of all Authors - and how sure was Genderize 
 
-df <- read_csv("df_w_faculty.csv") #remove later 
+df <- read_csv("df_w_faculty.csv") 
 ggplot(df, aes(x = as.numeric(First.Author.Gender.Probability)))+
   geom_histogram(aes(y=..density..))
 
@@ -335,7 +219,7 @@ ggplot(df_gender_last, aes(x = as.numeric(Last.Author.Gender.Probability)))+
   geom_histogram(aes(y=..density..))
 
 #QUOESTION- should we remove the papers where genderize isn't super sure? 
-#Remember that just because it is unsure aboyt first author gender then it isn't unsure about last author, so a lot of data we are possibly throwing away. Don't know if we should eyeball some of teh names that it is unsure about at check if we agree with the gender it has assigned. Alot of the names are danish anyhow. Okay it also has a hard time on Asian names - in Roberta's paper they actually remove the Asian Authors because the genderize isn't good enough. And i can see that it classifies Andrea as male, Janne as male and Kim as female just as an example. 
+#Remember that just because it is unsure about first author gender then it isn't unsure about last author, so a lot of data we are possibly throwing away. Don't know if we should eyeball some of teh names that it is unsure about at check if we agree with the gender it has assigned. Alot of the names are danish anyhow. Okay it also has a hard time on Asian names - in Roberta's paper they actually remove the Asian Authors because the genderize isn't good enough. And i can see that it classifies Andrea as male, Janne as male and Kim as female just as an example. 
 
 df_gender_last <- df %>% filter(Last.Author.Gender.Probability < 0.70)
 
@@ -355,6 +239,80 @@ df<- df %>% mutate(Last.Author.Gender = ifelse(Last.Author.Gender.Probability < 
 ```
 
 
+
+```{r}
+#Exploring our data 
+#Abstract lengths of characters
+#We have abstracts with a total of 8 words and a abstract with 922 words. 
+
+library(stringr)
+library(dplyr)
+df <- df %>% 
+  mutate(wordcount = str_count(df$Abstract, pattern = "\\w+"))
+#Not sure i understand the regular expressions . and my choice of those influences the word count. I see that, because the length_words and the df_with_wordcount are not identical. 
+
+length_words <- sapply(strsplit(df$Abstract, " "), length)
+
+#we have abstracts with 8 words and 922/939 words 
+range(length_words)
+range(df$wordcount)
+
+#The histogram shows the distribution of abstranct lengths - shows that it makes sense to have a max length of 500 for our BERT
+ggplot(df_with_wordcount, aes(x = as.numeric(wordcount)))+
+  geom_histogram(aes(y=..density..))
+#Super thin tail on our distribution - so we remove articles with more than 500 words. 
+#We must remove the abstracts that have a word count higher than 500 
+
+df <- df %>% filter(wordcount< 500)
+
+#How many papers do we have?
+# We have 8134 Articles 
+
+length(df$Article.Title) 
+
+#How is the gender distribution in general (first author)?
+
+ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
+
+
+#How is the gender distribution in general (last author)?
+#Comment for the plot. it is interesting to see that there is a lot more male last authors, indicating that many of the head of departments are male. There is an increase in male last authors compared to male first authors and the female authors is in outnumbered in both conditions. 
+
+ggplot(df, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
+
+#How is the gender distribution in years (first author)?
+#these plots would be more informative if the bars were placed next to eachother, but I dont know how to do that, without specifying a y-axis. 
+
+ggplot(df, aes(Publication.Year, fill = First.Author.Gender)) + geom_bar()
+
+
+#How is the gender distribution in years (last author)?
+
+ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) + 
+  geom_bar()
+  
+  
+
+
+
+#Abstract sentences 
+#We are moving into the realm of NLP maybe we should leave that for Python :-) 
+
+##Research areas  
+#Don't know what the NA is doing in there :-) 
+#Would be possible to make some cool plots with gender ditribution within each faculty.
+
+df<- read_csv("df_w_faculty.csv")
+
+ggplot(df, aes(x = Faculty, fill = Faculty)) + 
+  geom_bar()
+
+write_csv(df, "df_ready_BERT.csv") 
+
+```
+
+
+
 ###Trying to make the lix thing work - but can't... cry
 
 
@@ -368,5 +326,9 @@ sample_df <- df %>%
   dplyr::filter(Last.Author.Name == "Adam")
 
 lix_df <- sample_df %>% readability.num(sample_df$Abstract = list, parameters = c(char = 6, const = 1000) )
+```
+```{r}
+df<-read_csv("df_ready_BERT.csv")
+
 ```
 
