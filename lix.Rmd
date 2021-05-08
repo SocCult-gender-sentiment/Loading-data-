@@ -62,6 +62,25 @@ lix <- function(n_words, n_breaks, n_longwords){
 lix_df <- lix_df %>% 
   mutate(LIX = lix(n_words = wordcount, n_breaks = n_breaks, n_longwords = long_word))
 
+write_csv(lix_df,"lix_df.csv")
+```
+
+
+```{r}
+#Combine all the dataframes 
+dflix <- read_csv("lix_df.csv")
+dflix <- dflix %>% select(wordcount, n_breaks, long_word)
+dfsen <- read_csv("dfsentiment.csv")
+
+
+df <- cbind(dfsen,dflix)
+
+#Removing extra (X) columns from download 
+df <- df[, -1] 
+
+write_csv(df, "df_lix_sentiment.csv")
+
+
 
 ```
 
