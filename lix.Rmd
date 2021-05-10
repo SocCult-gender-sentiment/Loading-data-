@@ -74,8 +74,19 @@ write_csv(lix_df,"lix_df.csv")
 ```{r}
 #Combine all the dataframes 
 dflix <- read_csv("lix_df.csv")
-dflix <- dflix %>% select(wordcount, n_breaks, long_word)
+dflix <- dflix %>% select(wordcount, n_breaks, long_word, LIX)
 dfsen <- read_csv("dfsentiment.csv")
+
+#Finding the cases where both first and last author have below 0.70 probability for correct gender identification
+
+df_gender <- dfsen %>%  filter(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70)
+
+#removing them from our data 
+
+dfsen <- dfsen %>% filter(!(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70))
+
+dfsen<- dfsen %>% mutate(First.Author.Gender = ifelse(First.Author.Gender.Probability < 0.70, NA, First.Author.Gender))
+dfsen<- dfsen %>% mutate(Last.Author.Gender = ifelse(Last.Author.Gender.Probability < 0.70, NA, Last.Author.Gender))
 
 
 df <- cbind(dfsen,dflix)

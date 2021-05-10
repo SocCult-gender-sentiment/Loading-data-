@@ -1,0 +1,46 @@
+---
+title: "Preliminary exploration"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#Load packages 
+
+pacman::p_load(tidyverse,
+               dplyr,
+               plyr,
+               stringr,
+               tidyr)
+```
+
+```{r}
+#load data 
+
+df <- read_csv("df_lix_sentiment.csv")
+
+#removing NA - not sure if i should actually do that 
+df <- df %>%drop_na(label, First.Author.Gender)
+
+df <- df %>% mutate(
+  First.Author.Gender = as.factor(First.Author.Gender),
+  label = as.factor(label)
+)
+
+ggplot(df, aes(x = label, fill = label)) +
+  geom_bar()+
+  facet_wrap(~First.Author.Gender)
+
+ggplot(df, aes(x = label, y = density(), color = label))+
+  geom_smooth(method = "gam")+ facet_wrap(~First.Author.Gender)
+
+
+ggplot(df, aes(x = , fill = Last.Author.Gender)) + 
+  geom_bar()
+
+```
+

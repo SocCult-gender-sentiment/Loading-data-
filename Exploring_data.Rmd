@@ -221,13 +221,27 @@ ggplot(df_gender_last, aes(x = as.numeric(Last.Author.Gender.Probability)))+
 #QUOESTION- should we remove the papers where genderize isn't super sure? 
 #Remember that just because it is unsure about first author gender then it isn't unsure about last author, so a lot of data we are possibly throwing away. Don't know if we should eyeball some of teh names that it is unsure about at check if we agree with the gender it has assigned. Alot of the names are danish anyhow. Okay it also has a hard time on Asian names - in Roberta's paper they actually remove the Asian Authors because the genderize isn't good enough. And i can see that it classifies Andrea as male, Janne as male and Kim as female just as an example. 
 
+
+#Finding the cases where both first and last author have below 0.70 probability for correct gender identification
+
+df_gender <- df %>%  filter(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70)
+
+#removing them from our data 
+
+df <- df %>% filter(!(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70))
+
+#Finding how many cases where either first or last author gender probability is below 0.70
+
 df_gender_last <- df %>% filter(Last.Author.Gender.Probability < 0.70)
 
 df_gender_last <- df_gender_last %>% select(c(Last.Author.Name, Last.Author.Gender.Probability,Last.Author.Gender))
 
 df_gender_first <- df %>% filter(First.Author.Gender.Probability < 0.70)
 
+
 df_gender_first <- df_gender_first %>% select(c(First.Author.Name, First.Author.Gender.Probability,First.Author.Gender))
+
+
 
 #Replacing genders with low probability with NA 
 
@@ -302,7 +316,6 @@ ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) +
 #Don't know what the NA is doing in there :-) 
 #Would be possible to make some cool plots with gender ditribution within each faculty.
 
-df<- read_csv("df_w_faculty.csv")
 
 ggplot(df, aes(x = Faculty, fill = Faculty)) + 
   geom_bar()
@@ -312,33 +325,4 @@ write_csv(df, "df_ready_BERT.csv")
 ```
 
 
-
-###Trying to make the lix thing work - but can't... cry
-
-
-```{r}
-
-#Does not WORK
-df$Abstract <- as.character(df$Abstract)
-sample_df <- df %>% subset(Last.Author.Name == Adam & Last.Author.Name == Adelio)
-
-sample_df <- df %>%
-  dplyr::filter(Last.Author.Name == "Adam")
-
-lix_df <- sample_df %>% readability.num(sample_df$Abstract = list, parameters = c(char = 6, const = 1000) )
-```
-```{r}
-df<-read_csv("df_ready_BERT.csv")
-
-```
-
-```{r}
-#calulate lix - must first extract number of words, number of spaces and number of words 7 letters or longer
-lix <- function(n_words, n_breaks, n_longwords){
-  lix <- (n_words / n_breaks) + ((n_longwords * 100) / n_words)
-  return(lix)
-}
-
-lix(500,480,98)
-```
 
