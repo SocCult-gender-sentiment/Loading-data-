@@ -1,0 +1,96 @@
+---
+title: "Confindence"
+output: html_document
+---
+
+```{r}
+pacman::p_load(readr, tidyverse, dplyr)
+```
+
+
+Reading word lists
+```{r}
+High_confidence_word <- read_file("corpus/positive.txt")
+
+High_confidence_word <- strsplit(High_confidence_word, "\r\n")
+
+High_confidence_word <- unlist(High_confidence_word)
+
+
+Low_confidence_word <- read_file("corpus/negative.txt")
+
+Low_confidence_word <- strsplit(Low_confidence_word, "\r\n")
+
+Low_confidence_word <- unlist(Low_confidence_word)
+
+```
+
+Reading data
+```{r}
+
+df <- read_csv("df_lix_sentiment.csv", )
+
+```
+
+Splitting abstract - not needed anymore
+
+```{r}
+#df <- df %>%
+#  mutate(
+#    Abstract_split = strsplit(Abstract, " ")
+#  )
+```
+
+
+Counting frequency of confidence words in abstract
+
+```{r}
+
+endings = c("s", "ly", "e", "ing")
+
+str_detect(High_confidence_word, "")
+str_detect(endings, "")
+str_detect(df$Abstract, "")
+
+#high confidence
+df <- df %>%
+  mutate(
+    highconfidence =
+      sum(str_count(Abstract, High_confidence_word))
+    )
+
+df <- df %>%
+  mutate(
+    highconfidence =
+      str_count(Abstract, High_confidence_word)
+    )
+
+#checking range 
+range(df$highconfidence)
+
+#low confidence
+df <- df %>%
+  mutate( lowconfidence =
+            str_count(Abstract_split, Low_confidence_word)
+    
+  )
+range(df$lowconfidence)
+
+```
+
+```{r}
+df <- df %>%
+  mutate( 
+    totalconfidence = (highconfidence - lowconfidence)
+  )
+
+range(df$totalconfidence)
+
+```
+
+
+```{r}
+dftotal <- df %>%
+  filter(totalconfidence == 0)
+```
+
