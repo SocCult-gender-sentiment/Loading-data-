@@ -23,24 +23,22 @@ pacman::p_load(tidyverse,
 
 df <- read_csv("df_lix_sentiment.csv")
 
-#removing NA - not sure if i should actually do that 
-df <- df %>%drop_na(label, First.Author.Gender)
 
-df <- df %>% mutate(
-  First.Author.Gender = as.factor(First.Author.Gender),
-  label = as.factor(label)
-)
-
-ggplot(df, aes(x = label, fill = label)) +
-  geom_bar()+
-  facet_wrap(~First.Author.Gender)
-
-ggplot(df, aes(x = label, y = density(), color = label))+
-  geom_smooth(method = "gam")+ facet_wrap(~First.Author.Gender)
+dfff <- df %>% filter(First.Author.Gender == "female")
+dflf <- df %>% filter(Last.Author.Gender == "female")
+dffm <- df %>% filter(First.Author.Gender == "male")
+dflm <- df %>% filter(Last.Author.Gender == "male")
 
 
-ggplot(df, aes(x = , fill = Last.Author.Gender)) + 
-  geom_bar()
+ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
+ggplot(df, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
+
+#How is the gender distribution in years (first author)?
+#these plots would be more informative if the bars were placed next to eachother, but I dont know how to do that, without specifying a y-axis. 
+
+ggplot(df, aes(x= Publication.Year, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+ggplot(df, aes(x= Publication.Year, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
 
 ```
 
