@@ -26,6 +26,11 @@ pacman::p_load(tidyverse,
 #calulate lix - must first extract number of words, number of spaces and number of words 7 letters or longer
 lix_df <- read_csv("df_ready_BERT.csv")
 
+#Remove numbers and special characters 
+lix_df <- lix_df %>% mutate(
+  Abstract = str_replace_all(Abstract, "[[:punct:]]", ""))
+
+
 #counting total number of words in each abstract
 lix_df <- lix_df %>% 
   mutate(wordcount = str_count(lix_df$Abstract, pattern = "\\w+"))
