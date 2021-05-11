@@ -28,7 +28,7 @@ Low_confidence_word <- unlist(Low_confidence_word)
 Reading data
 ```{r}
 
-df <- read_csv("df_lix_sentiment.csv", )
+dfA <- read_csv("df_lix_sentiment.csv", )
 
 ```
 
@@ -53,38 +53,48 @@ str_detect(endings, "")
 str_detect(df$Abstract, "")
 
 #high confidence
-df <- df %>%
+dfA <- dfA %>%
+  rowwise() %>% 
   mutate(
     highconfidence =
       sum(str_count(Abstract, High_confidence_word))
-    )
-
-df <- df %>%
-  mutate(
-    highconfidence =
-      str_count(Abstract, High_confidence_word)
     )
 
 #checking range 
 range(df$highconfidence)
 
 #low confidence
-df <- df %>%
+dfA <- dfA %>%
+  rowwise() %>% 
   mutate( lowconfidence =
-            str_count(Abstract_split, Low_confidence_word)
+            sum(str_count(Abstract, Low_confidence_word))
     
   )
 range(df$lowconfidence)
+max(dfA$lowconfidence)
 
 ```
 
 ```{r}
-df <- df %>%
+dfA <- dfA %>%
+  mutate(
+    highconfidence = as.numeric(highconfidence),
+    lowconfidence = as.numeric(lowconfidence)
+  )
+
+
+```
+
+
+```{r}
+dfA <- dfA %>%
   mutate( 
     totalconfidence = (highconfidence - lowconfidence)
   )
 
 range(df$totalconfidence)
+min(dfA$totalconfidence) #-18
+max(dfA$totalconfidence) #28
 
 ```
 
@@ -92,5 +102,19 @@ range(df$totalconfidence)
 ```{r}
 dftotal <- df %>%
   filter(totalconfidence == 0)
+```
+
+
+```{r}
+dfA <- dfA %>%
+  select(
+    totalconfidence
+  )
+
+df_lix_sentiment <- read.csv("df_lix_sentiment.csv") 
+
+df_lix_sentiment_confidence <- cbind(df_lix_sentiment, dfA)
+
+write.csv(df_lix_sentiment_confidence, "df_lix_sentiment_confidence.csv")
 ```
 

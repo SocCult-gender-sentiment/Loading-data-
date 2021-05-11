@@ -7,22 +7,181 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+pacman::p_load(readr, 
+               tidyverse,
+               metafor,
+               brms, 
+               rethinking, 
+               viridis, 
+               bayesplot)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+loading and cleaning data
+```{r}
+df <- read.csv("df_lix_sentiment_confidence.csv")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+df <- df %>%
+  mutate(
+    Article.Title = as.factor(Article.Title),
+    Last.Author.Gender = as.factor(Last.Author.Gender),
+    First.Author.Gender = as.factor(First.Author.Gender),
+    Sentiment.label = as.factor(label),
+    Faculty = as.factor(Faculty),
+    LIX = as.numeric(LIX),
+    Citations = as.numeric(Times.Cited..All.Databases),
+    Publication.Year = as.numeric(Publication.Year),
+    totalconfidence = as.numeric(totalconfidence)
+    
+  )
+
+
+df <- df %>%
+  select(
+    Article.Title,
+    Last.Author.Gender,
+    First.Author.Gender,
+    Sentiment.label,
+    Faculty,
+    LIX,
+    Citations,
+    Publication.Year,
+    totalconfidence
+  )
+
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Looking at distributions 
+
+```{r}
+#Citations
+range(df$Citations)
+
+hist(df$Citations, breaks = 1000, xlim = range(0:100))
+
+
+```
+Citations are count data - this calls for a poisson 
+
+
+
+```{r}
+#LIX
+range(df$LIX)
+
+hist(df$LIX, breaks = 100, xlim = range(0:100))
+
+
+
+```
+Lix is a beautiful gaussian  - should standarize
+
+Scaling LIX to be 0-centered
+```{r}
+df <- df %>% 
+  mutate(
+    LIX = scale(LIX)
+  )
+
+hist(df$LIX, breaks = 100, xlim = range(-10:10))
+
+```
+
+
+Confidence
+```{r}
+hist(df$totalconfidence, breaks = 100, xlim = range(-50:50))
+
+
+```
+Scaling confidence to be 0-centered
+```{r}
+df <- df %>% 
+  mutate(
+    totalconfidence = scale(totalconfidence)
+  )
+
+hist(df$totalconfidence, breaks = 100, xlim = range(-10:10))
+
+```
+
+
+
+```{r}
+summary(df$Citations) 
+sd(df$Citations)
+#mean = 7.9, sd = 15.3
+```
+
+
+
+
+models 
+
+Outcome: Citations
+
+Predictors:
+- First.gender
+
+
+```{r}
+df1 <- df %>%
+  group_by(Faculty, Article.Title) %>%
+  summarise(Citation_mean = mean(Citations, na.rm=T))
+
+sd(df1$Citation_mean)
+```
+
+
+
+```{r}
+
+f1 <- bf(Citations ~ 0 + Sentiment.label:First.Author.Gender + (1 + Sentiment.label:First.Author.Gender|Article.Title))
+
+
+get_prior(f1, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f1_prior <- c(
+  prior(normal(7.9, 15.3), class = b),
+  prior(normal(0,5), class = sd))
+
+
+
+m1_prior <- brm(
+  f1,
+  data = df,
+  family = poisson(),
+  prior = f1_prior,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m1_prior, nsamples = 100)
+
+f1_prior <- c(
+  prior(normal(0,1), class = Intercept),
+  prior(normal(0,0.1), class = sd),
+  prior(normal(2,0.5), class = b, coef = "Sentiment.labelNEGATIVE:First.Author.Genderfemale"),
+  prior(normal(2,0.5), class = b, coef = "Sentiment.labelNEGATIVE:First.Author.Gendermale"),
+  prior(normal(2, 0.5), class = b, coef = "Sentiment.labelPOSITIVE:First.Author.Genderfemale"),
+  prior(normal(2, 0.5), class = b, coef = "Sentiment.labelPOSITIVE:First.Author.Gendermale"),
+  prior(normal(1,0.5), class = sd, coef = "Sentiment.labelNEGATIVE:First.Author.Genderfemale"),
+  prior(normal(1, 0.5), class = sd, coef = "Sentiment.labelNEGATIVE:First.Author.Gendermale"),
+  prior(normal(1, 0.5), class = sd, coef = "Sentiment.labelPOSITIVE:First.Author.Genderfemale"),
+  prior(normal(1, 1), class = Sd, coef = "Sentiment.labelPOSITIVE:First.Author.Gendermale"),
+  
+)
+
+
+
+```
+
