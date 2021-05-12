@@ -15,7 +15,8 @@ pacman::p_load(readr,
                brms, 
                rethinking, 
                viridis, 
-               bayesplot)
+               bayesplot,
+               psych)
 ```
 
 
@@ -54,6 +55,39 @@ df <- df %>%
 
 ```
 
+```{r}
+#first author sentiment 
+ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+#Last author sentiment
+ggplot(df, aes(Sentiment.label, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+```
+
+
+
+```{r}
+#First author
+ggplot(df, aes(First.Author.Gender, totalconfidence, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+ggplot(df, aes(Faculty, totalconfidence, fill = Faculty)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5) + facet_wrap(~First.Author.Gender)
+
+#Last author
+ggplot(df, aes(Last.Author.Gender, totalconfidence, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+```
+
+```{r}
+
+ggplot(df, aes(First.Author.Gender, LIX, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+ggplot(df, aes(x=First.Author.Gender, y=LIX, fill = First.Author.Gender))+labs(x ="Gender", y ="LIX")+geom_boxplot(width =0.5) +stat_summary(fun.y =mean, geom ="point", shape =23, colour ="Black")
+
+ggplot(df, aes(Last.Author.Gender, LIX, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+```
+
+
 
 Looking at distributions 
 
@@ -66,6 +100,19 @@ hist(df$Citations, breaks = 1000, xlim = range(0:100))
 
 ```
 Citations are count data - this calls for a poisson 
+
+```{r}
+df <- df %>%
+  mutate(
+    log_Cit = log(Citations)
+  )
+
+hist(df$log_Cit, breaks = 1000, xlim = range(0:100))
+
+summary(df$log_Cit)
+
+```
+
 
 
 
@@ -89,6 +136,10 @@ df <- df %>%
 
 hist(df$LIX, breaks = 100, xlim = range(-10:10))
 
+
+mean(df$LIX)
+
+sd(df$LIX)
 ```
 
 
@@ -140,7 +191,7 @@ sd(df1$Citation_mean)
 
 ```{r}
 
-f1 <- bf(Citations ~ 0 + Sentiment.label:First.Author.Gender + (1 + Sentiment.label:First.Author.Gender|Article.Title))
+f1 <- bf(Citations ~ 0 + Sentiment.label:First.Author.Gender + (1 |Faculty))
 
 
 get_prior(f1, data = df, family = poisson())
@@ -148,8 +199,12 @@ get_prior(f1, data = df, family = poisson())
 #(3, 0, 2.5)
 
 f1_prior <- c(
-  prior(normal(7.9, 15.3), class = b),
-  prior(normal(0,5), class = sd))
+  prior(normal(0, 0.5), class = b),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelNEGATIVE:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelNEGATIVE:First.Author.Gendermale),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelPOSITIVE:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelPOSITIVE:First.Author.Gendermale),
+  prior(normal(0,0.1), class = sd))
 
 
 
@@ -167,21 +222,482 @@ m1_prior <- brm(
 
 pp_check(m1_prior, nsamples = 100)
 
-f1_prior <- c(
-  prior(normal(0,1), class = Intercept),
-  prior(normal(0,0.1), class = sd),
-  prior(normal(2,0.5), class = b, coef = "Sentiment.labelNEGATIVE:First.Author.Genderfemale"),
-  prior(normal(2,0.5), class = b, coef = "Sentiment.labelNEGATIVE:First.Author.Gendermale"),
-  prior(normal(2, 0.5), class = b, coef = "Sentiment.labelPOSITIVE:First.Author.Genderfemale"),
-  prior(normal(2, 0.5), class = b, coef = "Sentiment.labelPOSITIVE:First.Author.Gendermale"),
-  prior(normal(1,0.5), class = sd, coef = "Sentiment.labelNEGATIVE:First.Author.Genderfemale"),
-  prior(normal(1, 0.5), class = sd, coef = "Sentiment.labelNEGATIVE:First.Author.Gendermale"),
-  prior(normal(1, 0.5), class = sd, coef = "Sentiment.labelPOSITIVE:First.Author.Genderfemale"),
-  prior(normal(1, 1), class = Sd, coef = "Sentiment.labelPOSITIVE:First.Author.Gendermale"),
-  
+
+```
+
+
+```{r}
+m1_post <- brm(
+  f1,
+  data = df,
+  family = poisson(),
+  prior = f1_prior,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post, nsamples = 100)
+
+summary(m1_post)
+
+stanplot(m1_post)
+```
+```{r}
+plot()
+```
+
+
+
+```{r}
+mcmc_trace(m1_post,  pars = "b_Sentiment.labelNEGATIVE:First.Author.Genderfemale", "b_Sentiment.labelPOSITIVE:First.Author.Genderfemale" ) + theme_classic()
+
+mcmc_trace(m1_post,  pars = "b_Sentiment.labelNEGATIVE:First.Author.Gendermale", "b_Sentiment.labelPOSITIVE:First.Author.Gendermale" ) + theme_classic()
+
+
+mcmc_rank_overlay(m1_post, pars = "b_Intercept", "b_DiagnosisTD") + theme_classic() 
+
+
+#Plot of estimates
+mcmc_plot(m1_post)
+
+#Hypothesis testing
+hypothesis(m1_post, "Sentiment.labelNEGATIVE:First.Author.Genderfemale < 0")
+
+#Posterior update check
+plot(hypothesis(m1_post, "Sentiment.labelNEGATIVE:First.Author.Genderfemale < 0"))
+plot(hypothesis(m1_post, "Sentiment.labelPOSITIVE:First.Author.Genderfemale < 0"))
+
+plot(hypothesis(m1_post, "Sentiment.labelNEGATIVE:First.Author.Gendermale < 0"))
+plot(hypothesis(m1_post, "Sentiment.labelPOSITIVE:First.Author.Gendermale < 0"))
+
+
+plot(hypothesis(m1_post, "Sentiment.labelNEGATIVE:First.Author.Genderfemale < Sentiment.labelNEGATIVE:First.Author.Gendermale"))
+```
+
+
+
+```{r}
+df_cor1 <- df %>%
+  dplyr::select(Sentiment.label, LIX, totalconfidence, Citations)
+
+pairs.panels(df_cor1)
+
+```
+```{r}
+f1_confidence <- bf(Citations ~ 0 + totalconfidence:First.Author.Gender + (1 |Faculty))
+
+
+get_prior(f1_confidence, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f1_prior_confidence <- c(
+  prior(normal(0, 0.5), class = b),
+  prior(normal(0, 0.2), class = b, coef = totalconfidence:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = totalconfidence:First.Author.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m1_prior_confidence <- brm(
+  f1_confidence,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_confidence,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
 )
 
 
+pp_check(m1_prior_confidence, nsamples = 100)
 
+
+
+```
+```{r}
+m1_post_confidence <- brm(
+  f1_confidence,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_confidence,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post_confidence, nsamples = 100)
+
+summary(m1_post_confidence)
+
+stanplot(m1_post_confidence)
+
+plot(m1_post_confidence)
+```
+
+
+```{r}
+f1_lix <- bf(Citations ~ 0 + LIX:First.Author.Gender + (1 |Faculty))
+
+
+get_prior(f1_lix, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f1_prior_lix <- c(
+  prior(normal(0, 0.5), class = b),
+  prior(normal(0, 0.2), class = b, coef = LIX:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = LIX:First.Author.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m1_prior_lix <- brm(
+  f1_lix,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_lix,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m1_prior_confidence, nsamples = 100)
+
+
+```
+
+
+
+
+```{r}
+m1_post_lix <- brm(
+  f1_lix,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_lix,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post_lix, nsamples = 100)
+
+summary(m1_post_lix)
+
+stanplot(m1_post_lix)
+
+plot(m1_post_lix)
+```
+```{r}
+
+f2 <- bf(Citations ~ 0 + Sentiment.label:totalconfidence:LIX:First.Author.Gender + (1 |Faculty))
+
+
+get_prior(f2, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f2_prior <- c(
+  prior(normal(0, 0.5), class = b),
+  prior(normal(0, 0.2), class = b, 
+        coef = Sentiment.labelNEGATIVE:totalconfidence:LIX:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef = Sentiment.labelNEGATIVE:totalconfidence:LIX:First.Author.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = Sentiment.labelPOSITIVE:totalconfidence:LIX:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef =  Sentiment.labelPOSITIVE:totalconfidence:LIX:First.Author.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m2_prior <- brm(
+  f2,
+  data = df,
+  family = poisson(),
+  prior = f2_prior,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m2_prior, nsamples = 100)
+
+
+```
+
+
+
+
+```{r}
+m2_post <- brm(
+  f2,
+  data = df,
+  family = poisson(),
+  prior = f2_prior,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m2_post, nsamples = 100)
+
+summary(m2_post)
+
+stanplot(m2_post)
+
+plot(m2_post)
+```
+
+
+```{r}
+f3 <- bf(Citations ~ 0 + Sentiment.label:First.Author.Gender + totalconfidence + LIX + (1 |Faculty))
+
+
+get_prior(f3, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f3_prior <- c(
+  prior(normal(0, 0.2), class = b, 
+        coef = LIX),
+  prior(normal(0, 0.2), class = b, 
+        coef = Sentiment.labelNEGATIVE:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef = Sentiment.labelNEGATIVE:First.Author.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = Sentiment.labelPOSITIVE:First.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef =  Sentiment.labelPOSITIVE:First.Author.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = totalconfidence),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m3_prior <- brm(
+  f3,
+  data = df,
+  family = poisson(),
+  prior = f3_prior,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m3_prior, nsamples = 100)
+
+
+
+```
+
+```{r}
+m3_post <- brm(
+  f3,
+  data = df,
+  family = poisson(),
+  prior = f3_prior,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m3_post, nsamples = 100)
+
+summary(m3_post)
+
+stanplot(m3_post)
+
+plot(m3_post)
+
+```
+
+
+
+
+#Looking at Last author
+```{r}
+
+f1_last <- bf(Citations ~ 0 + Sentiment.label:Last.Author.Gender + (1 |Faculty))
+
+
+get_prior(f1_last, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f1_prior_last <- c(
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelNEGATIVE:Last.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelNEGATIVE:Last.Author.Gendermale),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelPOSITIVE:Last.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = Sentiment.labelPOSITIVE:Last.Author.Gendermale),
+  prior(normal(0,0.1), class = sd))
+
+
+
+m1_prior_last <- brm(
+  f1_last,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_last,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m1_prior_last, nsamples = 100)
+
+
+```
+
+
+```{r}
+m1_post_last <- brm(
+  f1_last,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_last,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post_last, nsamples = 100)
+
+summary(m1_post_last)
+
+stanplot(m1_post_last)
+
+plot(m1_post_last)
+```
+
+
+
+```{r}
+f1_confidence_last <- bf(Citations ~ 0 + totalconfidence:Last.Author.Gender + (1 |Faculty))
+
+
+get_prior(f1_confidence_last, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f1_prior_confidence_last <- c(
+  prior(normal(0, 0.2), class = b, coef = totalconfidence:Last.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = totalconfidence:Last.Author.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m1_prior_confidence_last <- brm(
+  f1_confidence_last,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_confidence_last,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m1_prior_confidence_last, nsamples = 100)
+
+```
+
+
+
+```{r}
+m1_post_confidence_last <- brm(
+  f1_confidence_last,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_confidence_last,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post_confidence_last, nsamples = 100)
+
+summary(m1_post_confidence_last)
+
+stanplot(m1_post_confidence_last)
+
+plot(m1_post_confidence_last)
+```
+
+
+```{r}
+f1_lix_last <- bf(Citations ~ 0 + LIX:Last.Author.Gender + (1 |Faculty))
+
+
+get_prior(f1_lix_last, data = df, family = poisson())
+
+#(3, 0, 2.5)
+
+f1_prior_lix_last <- c(
+  prior(normal(0, 0.5), class = b),
+  prior(normal(0, 0.2), class = b, coef = LIX:Last.Author.Genderfemale),
+  prior(normal(0, 0.2), class = b, coef = LIX:Last.Author.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m1_prior_lix_last <- brm(
+  f1_lix_last,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_lix_last,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+
+pp_check(m1_prior_confidence_last, nsamples = 100)
+
+
+```
+
+
+
+
+```{r}
+m1_post_lix_last <- brm(
+  f1_lix_last,
+  data = df,
+  family = poisson(),
+  prior = f1_prior_lix_last,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post_lix_last, nsamples = 100)
+
+summary(m1_post_lix_last)
+
+stanplot(m1_post_lix_last)
+
+plot(m1_post_lix_last)
 ```
 
