@@ -42,3 +42,46 @@ ggplot(df, aes(x= Publication.Year, fill = Last.Author.Gender)) + geom_bar(posit
 
 ```
 
+
+
+```{r}
+#first author sentiment 
+ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+#Last author sentiment
+ggplot(df, aes(Sentiment.label, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+
+```
+
+
+
+```{r}
+#First author
+ggplot(df, aes(First.Author.Gender, totalconfidence, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+ggplot(df, aes(Faculty, totalconfidence, fill = Faculty)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5) + facet_wrap(~First.Author.Gender)
+
+#Last author
+ggplot(df, aes(Last.Author.Gender, totalconfidence, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+```
+
+```{r}
+
+ggplot(df, aes(First.Author.Gender, LIX, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+ggplot(df, aes(x=First.Author.Gender, y=LIX, fill = First.Author.Gender))+labs(x ="Gender", y ="LIX")+geom_boxplot(width =0.5) +stat_summary(fun.y =mean, geom ="point", shape =23, colour ="Black")
+
+ggplot(df, aes(Last.Author.Gender, LIX, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+```
+
+```{r}
+ggplot(df, aes(Publication.Year, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single")) + facet_wrap(~Publication.Year)
+
+```
+
+
