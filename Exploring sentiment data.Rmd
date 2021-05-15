@@ -42,11 +42,37 @@ ggplot(df, aes(x= Publication.Year, fill = Last.Author.Gender)) + geom_bar(posit
 
 ```
 
+Removing NA's from Gender - do not run
+```{r}
+df <- df %>%
+  drop_na(First.Gender)
+
+df <- df %>%
+  drop_na(Last.Gender)
+
+```
+
+Cutting papers with more than 150citations for plotting
+```{r}
+df_cit150 <- df %>%
+  filter(Citations < 150)
+```
+
+
+```{r}
+ggplot(df_cit150, aes(Citations, fill =First.Gender)) + geom_density() + facet_wrap(~First.Gender)
+
+ggplot(df_cit150, aes(Citations, fill =Last.Gender)) + geom_density() + facet_wrap(~Last.Gender)
+
+ggplot(df_cit150, aes(Citations, fill =Sentiment)) + geom_density() + facet_wrap(~Sentiment)
+
+ggplot(df_cit150, aes(Citations, fill = Sentiment, color =Sentiment)) + geom_density( alpha=0.1) + facet_wrap(~First.Gender)
+```
 
 
 ```{r}
 #first author sentiment 
-ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+ggplot(df, aes(Sentiment, Citations, fill = First.Gender)) + geom_bar(position="dodge",  stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.2,position=position_dodge(0.9))
 
 #Last author sentiment
 ggplot(df, aes(Sentiment.label, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))

@@ -54,6 +54,8 @@ df <- df %>%
 
 ```
 
+
+
 Removing NA's from Gender - do not run
 ```{r}
 df <- df %>%
@@ -119,6 +121,7 @@ get_prior(f4, data = df, family = negbinomial())
 
 
 f4_prior <- c(
+  prior(lkj(2), class = cor),
   prior(normal(0, 0.2), class = b, 
         coef = Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale ),
   prior(normal(0, 0.2), class = b, 
@@ -135,7 +138,8 @@ f4_prior <- c(
         coef = Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale),
   prior(normal(0, 0.2), class = b, 
         coef = Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale),
-  prior(normal(0, 0.1), class = sd))
+  prior(normal(0, 0.1), class = sd),
+  prior(gamma(0.01, 0.01), class = shape))
 
 
 
@@ -147,8 +151,7 @@ m4_prior <- brm(
   sample_prior = 'only',
   backend = "cmdstanr",
   chains = 2,
-  cores = 2,
-  file = "m4_prior"
+  cores = 2
 )
 
 
@@ -160,6 +163,7 @@ pp_check(m4_prior, nsamples = 100)
 ```
 
 ```{r}
+set.seed(1234)
 m4_post <- brm(
   f4,
   data = df,
@@ -168,9 +172,7 @@ m4_post <- brm(
   sample_prior = T,
   backend = "cmdstanr",
   chains = 2,
-  cores = 2,
-  file ="m4_post",
-  file_refit = "on_change"
+  cores = 2
 )
 
 pp_check(m4_post, nsamples = 100)
@@ -181,9 +183,34 @@ stanplot(m4_post)
 
 plot(m4_post)
 
-mean(rnbinom(1.e4, exp(-0.06), prob = 0.1))
+mean(rnbinom(1.e4, exp(0.08), prob = 0.5))
 
 ```
+
+```{r}
+
+mcmc_trace(m4_post,  pars = "b_Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale", "b_Confidence:SentimentNEGATIVE:First.Gendermale:Last.Genderfemale") + theme_classic()
+
+mcmc_rank_overlay(m4_post, pars = "b_Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale", "b_Confidence:SentimentNEGATIVE:First.Gendermale:Last.Genderfemale") + theme_classic()
+
+
+
+#Plot of estimates
+mcmc_plot(m4_post)
+#Hypothesis testing
+hypothesis(m4_post, "Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale < Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale")
+#Posterior update check
+plot(hypothesis(m4_post, "Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale > Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale"))
+
+mcmc_trace(m4_post)
+
+#no valid effect detected from plots below
+plot(conditional_effects(m4_post), point=T)
+
+conditional_effects(m4_post)
+
+```
+
 
 #With year
 
