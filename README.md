@@ -7,3 +7,5 @@ The files in this folder:
 - Confidence rate: An Rmarkdown using LIWC 
 - Data exploring: An Rmarkdown for plots and other exploring functions
 - Analysis: An Rmarkdown with bayesioan modeling of the data
+
+Raw data can be found here: https://1drv.ms/u/s!AsmpB-hQgyEEg7VaSSscj94jAA74DA?e=MFwq8B 
