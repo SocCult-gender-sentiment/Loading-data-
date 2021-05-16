@@ -9,3 +9,5 @@ The files in this folder:
 - Analysis: An Rmarkdown with bayesioan modeling of the data
 
 Raw data can be found here: https://1drv.ms/u/s!AsmpB-hQgyEEg7VaSSscj94jAA74DA?e=MFwq8B 
+
+Confidence corspora can be found here: https://1drv.ms/u/s!AsmpB-hQgyEEg8EhrjfZtEd9kp1oeg?e=NbCNJV 
