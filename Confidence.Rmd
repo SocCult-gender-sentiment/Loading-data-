@@ -4,7 +4,9 @@ output: html_document
 ---
 
 ```{r}
-pacman::p_load(readr, tidyverse, dplyr)
+pacman::p_load(readr, 
+               tidyverse, 
+               dplyr)
 ```
 
 
@@ -28,32 +30,16 @@ Low_confidence_word <- unlist(Low_confidence_word)
 Reading data
 ```{r}
 
-dfA <- read_csv("df_lix_sentiment.csv", )
+df <- read_csv("df_lix_sentiment.csv")
 
 ```
-
-Splitting abstract - not needed anymore
-
-```{r}
-#df <- df %>%
-#  mutate(
-#    Abstract_split = strsplit(Abstract, " ")
-#  )
-```
-
 
 Counting frequency of confidence words in abstract
 
 ```{r}
 
-endings = c("s", "ly", "e", "ing")
-
-str_detect(High_confidence_word, "")
-str_detect(endings, "")
-str_detect(df$Abstract, "")
-
 #high confidence
-dfA <- dfA %>%
+dfA <- df %>%
   rowwise() %>% 
   mutate(
     highconfidence =
@@ -61,7 +47,7 @@ dfA <- dfA %>%
     )
 
 #checking range 
-range(df$highconfidence)
+range(dfA$highconfidence)
 
 #low confidence
 dfA <- dfA %>%
@@ -70,8 +56,9 @@ dfA <- dfA %>%
             sum(str_count(Abstract, Low_confidence_word))
     
   )
-range(df$lowconfidence)
-max(dfA$lowconfidence)
+
+#checking range
+range(dfA$lowconfidence)
 
 ```
 
@@ -85,6 +72,7 @@ dfA <- dfA %>%
 
 ```
 
+Creating total confidence variable 
 
 ```{r}
 dfA <- dfA %>%
@@ -92,28 +80,21 @@ dfA <- dfA %>%
     totalconfidence = (highconfidence - lowconfidence)
   )
 
-range(df$totalconfidence)
-min(dfA$totalconfidence) #-18
-max(dfA$totalconfidence) #28
+range(dfA$totalconfidence)
 
 ```
 
 
-```{r}
-dftotal <- df %>%
-  filter(totalconfidence == 0)
-```
-
-
+Merging total confidence variable with full data
 ```{r}
 dfA <- dfA %>%
   select(
     totalconfidence
   )
 
-df_lix_sentiment <- read.csv("df_lix_sentiment.csv") 
+df_lix_sentiment_confidence <- cbind(df, dfA)
 
-df_lix_sentiment_confidence <- cbind(df_lix_sentiment, dfA)
+#writing csv
 
 write.csv(df_lix_sentiment_confidence, "df_lix_sentiment_confidence.csv")
 ```
