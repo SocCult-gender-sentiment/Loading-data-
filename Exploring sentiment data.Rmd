@@ -111,3 +111,10 @@ ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position
 ```
 
 
+```{r}
+#plot showing mean citation count per year 
+ggplot(df, aes(Publication.Year, Times.Cited..All.Databases, fill= Publication.Year))+
+  geom_bar(stat = "summary", fun.y = mean) +
+  stat_summary(aes(label=round(..y..,2)), fun.y=mean, geom="text", size=4, vjust = -0.3)
+```
+
