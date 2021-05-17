@@ -3,11 +3,11 @@ This folder contains the analysis for Cognitive Science 4th semester exams in th
 
 The files in this folder:
 - Data cleaning: An Rmarkdown file loading and cleaning all scraped files
-- Sentiment analysis: A Colab file using using pipeline to add sentiment label to each abstract
-- Confidence rate: An Rmarkdown using LIWC 
-- Data exploring: An Rmarkdown for plots and other exploring functions
+- Sentiment: A Colab file using using pipeline to add sentiment label to each abstract
+- Confidence: An Rmarkdown using LIWC 
+- Exploring data: An Rmarkdown for plots and other exploring functions
 - Analysis: An Rmarkdown with bayesioan modeling of the data
 
 Raw data can be found here: https://1drv.ms/u/s!AsmpB-hQgyEEg7VaSSscj94jAA74DA?e=MFwq8B 
 
-Confidence corspora can be found here: https://1drv.ms/u/s!AsmpB-hQgyEEg8EhrjfZtEd9kp1oeg?e=NbCNJV 
+Confidence corpora can be found here: https://1drv.ms/u/s!AsmpB-hQgyEEg8EhrjfZtEd9kp1oeg?e=NbCNJV 
