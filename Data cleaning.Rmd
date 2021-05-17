@@ -5,8 +5,6 @@ date: "27/4/2021"
 output: html_document
 ---
 
-HEY KRIS. Du kan finde genderize i sidste chunk. Jeg er ikke 100 på at de virker endnu
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -42,17 +40,16 @@ write_csv(df, "alldata.csv")
 ```
 
 
-cleaning data
+Cleaning data
 We need to find:
 - first authors first name (Author.Full.Names)
 - last authors first name
-- papers where first author is for Asrhus university
+- papers where first author is from Aarhus university
 ```{r}
 #read csv with all files
 #df <- read.csv("alldata.csv")
 
 
-##extracting author names - only keep first names fra first Author and last author
 
 #Making empty columns to fill
 dfnames <- df %>% 
@@ -67,7 +64,7 @@ dfnames <- dfnames %>%
     Last.Author.Name = gsub(".*;", '', Last.Author.Name)
   )
 
-#finding first name only
+#Finding first name only
 # - first name is after comma
 dfnames <- dfnames %>%
   mutate(
@@ -82,27 +79,26 @@ dfnames <- dfnames %>%
     Last.Author.Name = str_replace(Last.Author.Name, " ", "")
   )
 
-# - only keep one name (first name before space)
+# - only keep one name if several is listed (first name before space)
 dfnames <- dfnames %>%
   mutate(
     First.Author.Name = gsub(" .*", '', First.Author.Name),
     Last.Author.Name = gsub(" .*", '', Last.Author.Name)
   )
 
-#Now its time for genderize!
-#but first let's only look at papers with first author from Aarhus univerity
 
 ```
 
+
 Finding papers with first author from Aarhus university
 ```{r}
-#extract characters after ]
+#extract characters after ] in Addresses
 aarhuspapers <- dfnames %>%
   mutate(
     First.Author.University = gsub(".*]", '', Addresses)
   )
 
-#remove space infront of characters   
+#remove space in front of characters   
 aarhuspapers <- aarhuspapers %>%
   mutate(
     First.Author.University = str_replace(First.Author.University, " ", "")
@@ -125,14 +121,15 @@ aarhuspapers <- aarhuspapers %>%
 #aarhuspapersfactor$First.Author.University
 
 #factor = 5098 universities
+#We have a total of 5098 different firt author universities in the full dataset
 
 #filtering only Aarhus univeristy
 aarhuspapers <- aarhuspapers %>%
   dplyr::filter(First.Author.University == "Aarhus Univ")
 
-#9318 observations = papers form Aarhus uni 
-#note some papers might have used another wording for aarhus university e.g University Aarhus - these are not included as I only eyeballed 3 or something
-# Could also consider if we should include papers from Aarhus universit hospital
+#9318 observations, papers form Aarhus uni 
+#note some papers might have used another wording for Aarhus university e.g University Aarhus - these are not included as I only eyeballed 3 or something
+# Could also consider if we should include papers from Aarhus university hospital
 ```
 
 
@@ -176,10 +173,10 @@ Define gender of first author and second author
 
 #newdf <- read.csv("cleandata.csv")
 
-#Predicting first author gender 
+#Predicting first author gender using API-key
 First.Author.Gender <- findGivenNames(newdf$First.Author.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10,progress = FALSE, ssl.verifypeer = FALSE)
 
-#Predicting last author gender
+#Predicting last author gender using API-key
 Last.Authour.Gender <- findGivenNames(newdf$Last.Author.Name, textPrepare = FALSE, country = NULL, language = NULL, apikey = "eabaf20628864c8dff0f446d606570a9", queryLength = 10, progress = FALSE, ssl.verifypeer = FALSE)
 
 
@@ -192,17 +189,17 @@ Last.Authour.Gender <- findGivenNames(newdf$Last.Author.Name, textPrepare = FALS
 #    country_id = as.character(country_id)
 #  )
 
-#renaming variables first author
+#Renaming variables first author
 First.Author.Gender <- First.Author.Gender %>% 
   dplyr::rename(
-    First.Author.Name= name,
+    First.Author.Name = name,
     First.Author.Gender = gender,
     First.Author.Gender.Probability = probability,
     First.Author.Gender.Count = count,
     First.Author.Gender.Country_ID = country_id
   )
 
-#renaming variables last author
+#Renaming variables last author
 Last.Authour.Gender <- Last.Authour.Gender %>% 
   dplyr::rename(
     Last.Author.Name = name,
@@ -231,7 +228,7 @@ semifinaldf <- semifinaldf %>% distinct(Article.Title,.keep_all = TRUE)
 write.csv(semifinaldf, "semifinaldf.csv")
 ```
 
-Save csv for BERT in Python
+
 
 Exploring the data
 ```{r}
