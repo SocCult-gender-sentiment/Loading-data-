@@ -20,235 +20,13 @@ pacman::p_load(tidyverse,
                koRpus,
                readxl)
 
-
-
-```
-
-```{r}
-#Loading the "clean" data with NA removed and summarized areas of research 
-
-df <- read_csv("semifinaldf.csv")
-
-#Removing extra (X) columns from download 
-#df <- df[, -c(1:2)] #delete column 5
-
-
-```
-
-```{r}
-#Subseting the research areas so only the first mentioned area is kept
-
-df <- df %>%
-  mutate(
-    Research.Areas = gsub(";.*", '', Research.Areas)
-  )
-
-df <- df %>%
-  mutate(
-    Research.Areas = gsub(",.*", '', Research.Areas)
-  )
-
-df <- df %>%
-  mutate(
-    Research.Areas = gsub("&.*", '', Research.Areas)
-  )
-
-df$Research.Areas <- as.factor(df$Research.Areas)
-levels(df$Research.Areas)
-
-#We still have 142 different categories, which would like to seperate into Faculties. 
-
-Area_df <- df %>% select(Research.Areas )
-
-Area_df <- unique(Area_df, incomparables = FALSE)
-Area_df <- Area_df %>% filter(!is.na(Research.Areas))
-
-write_csv(Area_df, "Area_of_research.csv") 
-
-df2 <- read_delim("Area_of_research_2.csv", delim = ";", col_names = TRUE,col_types = NULL)
-
-#The df2 now contains a specification of which faculty each Area of Research has.
-
-#No idea why the renaming does not work 
-names(df2)[names(df2) == "`Faculty `"] <- "Faculty"
-names(df2)[names(df2) == "`Area `"] <- "Area"
-
-#the plot shows how I have seperated reserach areas into faculties       
-ggplot(df2, aes(`Faculty `, fill= `Faculty `))+ geom_bar()
 ```
 
 
 ```{r}
-#Further data cleaning to assign faculty to each research area 
+#load data 
 
-###MESSY DATA CLEANING TO ASSIGN EACH RESEARCH AREA TO A FACULTY. 
-##Dont run this again - just load the df_w_faculty.csv - it has been cleaned 
-
-
-#Create a new column in df where faculty should be listed - I created df test to ensure im not messing with our so far clean data 
-
-df_test <- df 
-
-df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Religion" 
-                                            |Research.Areas == "Anthropology"|Research.Areas == "Area Studies" 
-                                            |Research.Areas == "Public Administarion"
-                                            |Research.Areas == "Cultural studies" 
-                                            |Research.Areas == "Communication"
-                                            |Research.Areas == "Philosophy"
-                                            |Research.Areas == "Education"
-                                            |Research.Areas == "Linguistics" 
-                                            |Research.Areas == "Social Sciences - Other Topics"
-                                            |Research.Areas == "History"
-                                            |Research.Areas == "Mathematical Methods In Social Sciences"
-                                            |Research.Areas == "Art" 
-                                            |Research.Areas == "Film"
-                                            |Research.Areas == "Ethnic studies"
-                                            |Research.Areas == "Instruments" 
-                                            |Research.Areas == "Music"
-                                            |Research.Areas == "Literature"
-                                            |Research.Areas == "Theater" 
-                                            |Research.Areas == "Socail Issues"
-                                            |Research.Areas == "Sociology"
-                                            |Research.Areas == "History" 
-                                            |Research.Areas == "Archaeology"
-                                            |Research.Areas == "Information Sciences"
-                                            |Research.Areas == "Arts" 
-                                            |Research.Areas == "Classics"
-                                            |Research.Areas == "Women's Studies"
-                                            |Research.Areas == "Asian Studies", 'a', ""))
-
-
-df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Business"
-                          |Research.Areas == "Government"
-                          |Research.Areas == "Behavioral Sciences" 
-                                            |Research.Areas == "Materials Science"
-                                            |Research.Areas == "Psychology"
-                                            |Research.Areas == "Public" 
-                                            |Research.Areas == "Demography"
-                                            |Research.Areas == "Criminology"
-                                            |Research.Areas == "Development Studies"
-                                            |Research.Areas == "Substance Abuse"
-                                            |Research.Areas == "Family Studies"
-                                            |Research.Areas == "Social Work"
-                                            |Research.Areas == "Urban Studies", 'b', Faculty))
-
-
-df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Chemistry"
-                                            |Research.Areas == "Elctrochemistry"
-                                            |Research.Areas == "Geology" 
-                                            |Research.Areas == "Plant Sciences"
-                                            |Research.Areas == "Genetics"
-                                            |Research.Areas == "Science" 
-                                            |Research.Areas == "Microbiology"
-                                            |Research.Areas == "Physics"
-                                            |Research.Areas == "Research"
-                                            |Research.Areas == "Polymer Science"
-                                            |Research.Areas == "Astronomy"
-                                            |Research.Areas == "Physical Geography"
-                                            |Research.Areas == "Computer Science" 
-                                            |Research.Areas == "Marine"
-                                            |Research.Areas == "Biodiversity" 
-                                            |Research.Areas == "Construction"
-                                            |Research.Areas == "Meteorology"
-                                            |Research.Areas == "Energy"
-                                            |Research.Areas == "Mathematics"
-                                            |Research.Areas == "Biotechnology"
-                                            |Research.Areas == "Physical Geography"
-                                            |Research.Areas == "Mycology"
-                                            |Research.Areas == "Geography"
-                                            |Research.Areas == "Cell Biology"
-                                            |Research.Areas == "Oceanography" 
-                                            |Research.Areas == "Evolutionary Biology"
-                                            |Research.Areas == "Thermodynamics"
-                                            |Research.Areas == "Mathematical"
-                                            |Research.Areas == "Nuclear Science"
-                                            |Research.Areas == "Developmental Biology"
-                                            |Research.Areas == "Reproductive Biology"
-                                            |Research.Areas == "Imaging Science"
-                                            |Research.Areas == "Crystalllography",
-                                            'n', Faculty))
-
-
-df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Biohemistry"
-                                            |Research.Areas == "Forestry"	
-                                            |Research.Areas == "Telecommunications" 
-                                            |Research.Areas == "Agriculture"
-                                            |Research.Areas == "Environmental Sciences"
-                                            |Research.Areas == "Engineering"			
-                                            |Research.Areas == "Life Sciences"
-                                            |Research.Areas == "Geochemistry"
-                                            |Research.Areas == "Zoology"
-                                            |Research.Areas == "Veterinary Sciences"
-                                            |Research.Areas == "Entomology"
-                                            |Research.Areas == "Nutrition"
-                                            |Research.Areas == "Mechanics" 
-                                            |Research.Areas == "Food Science"
-                                            |Research.Areas == "Automation" 
-                                            |Research.Areas == "Fisheries"
-                                            |Research.Areas == "Biophysics"
-                                            |Research.Areas == "Remote Sensing"
-                                            |Research.Areas == "Acoustics"
-                                            |Research.Areas == "Robotics"
-                                            |Research.Areas == "Water Resources"
-                                            |Research.Areas == "Architecture",
-                                            't', Faculty))
-
-#Adding the faculty h (health) on all the Articles that haven't been assigned another faculty. 
-df_test <- mutate(df_test, Faculty = ifelse(Faculty == "",
-                                            'h', Faculty))
-
-
-
-#Write csv so we don't have to run this mess again
-
-write_csv(df_test, "df_w_faculty.csv") 
-
-```
-
-
-```{r}
-#Replacing Author Names that were not genderindentified with a probability above 0.7 with NA 
-
-#Do we have the gender of all Authors - and how sure was Genderize 
-
-df <- read_csv("df_w_faculty.csv") 
-ggplot(df, aes(x = as.numeric(First.Author.Gender.Probability)))+
-  geom_histogram(aes(y=..density..))
-
-ggplot(df_gender_last, aes(x = as.numeric(Last.Author.Gender.Probability)))+
-  geom_histogram(aes(y=..density..))
-
-#QUOESTION- should we remove the papers where genderize isn't super sure? 
-#Remember that just because it is unsure about first author gender then it isn't unsure about last author, so a lot of data we are possibly throwing away. Don't know if we should eyeball some of teh names that it is unsure about at check if we agree with the gender it has assigned. Alot of the names are danish anyhow. Okay it also has a hard time on Asian names - in Roberta's paper they actually remove the Asian Authors because the genderize isn't good enough. And i can see that it classifies Andrea as male, Janne as male and Kim as female just as an example. 
-
-
-#Finding the cases where both first and last author have below 0.70 probability for correct gender identification
-
-df_gender <- df %>%  filter(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70)
-
-#removing them from our data 
-
-df <- df %>% filter(!(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70))
-
-#Finding how many cases where either first or last author gender probability is below 0.70
-
-df_gender_last <- df %>% filter(Last.Author.Gender.Probability < 0.70)
-
-df_gender_last <- df_gender_last %>% select(c(Last.Author.Name, Last.Author.Gender.Probability,Last.Author.Gender))
-
-df_gender_first <- df %>% filter(First.Author.Gender.Probability < 0.70)
-
-
-df_gender_first <- df_gender_first %>% select(c(First.Author.Name, First.Author.Gender.Probability,First.Author.Gender))
-
-
-
-#Replacing genders with low probability with NA 
-
-df<- df %>% mutate(First.Author.Gender = ifelse(First.Author.Gender.Probability < 0.70, NA, First.Author.Gender))
-df<- df %>% mutate(Last.Author.Gender = ifelse(Last.Author.Gender.Probability < 0.70, NA, Last.Author.Gender))
-
-
+df <- read_csv("df_lix_sentiment.csv")
 
 ```
 
@@ -256,33 +34,6 @@ df<- df %>% mutate(Last.Author.Gender = ifelse(Last.Author.Gender.Probability < 
 
 ```{r}
 #Exploring our data 
-#Abstract lengths of characters
-#We have abstracts with a total of 8 words and a abstract with 922 words. 
-
-library(stringr)
-library(dplyr)
-df <- df %>% 
-  mutate(wordcount = str_count(df$Abstract, pattern = "\\w+"))
-#Not sure i understand the regular expressions . and my choice of those influences the word count. I see that, because the length_words and the df_with_wordcount are not identical. 
-
-length_words <- sapply(strsplit(df$Abstract, " "), length)
-
-#we have abstracts with 8 words and 922/939 words 
-range(length_words)
-range(df$wordcount)
-
-#The histogram shows the distribution of abstranct lengths - shows that it makes sense to have a max length of 500 for our BERT
-ggplot(df_with_wordcount, aes(x = as.numeric(wordcount)))+
-  geom_histogram(aes(y=..density..))
-#Super thin tail on our distribution - so we remove articles with more than 500 words. 
-#We must remove the abstracts that have a word count higher than 500 
-
-df <- df %>% filter(wordcount< 500)
-
-#How many papers do we have?
-# We have 8134 Articles 
-
-length(df$Article.Title) 
 
 #How is the gender distribution in general (first author)?
 
@@ -306,9 +57,6 @@ ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) +
   geom_bar()
   
   
-
-
-
 #Abstract sentences 
 #We are moving into the realm of NLP maybe we should leave that for Python :-) 
 
@@ -320,8 +68,128 @@ ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) +
 ggplot(df, aes(x = Faculty, fill = Faculty)) + 
   geom_bar()
 
-write_csv(df, "df_ready_BERT.csv") 
 
+
+```
+
+
+
+```{r}
+
+
+#Exploring gender distribution 
+dfff <- df %>% filter(First.Author.Gender == "female")
+dflf <- df %>% filter(Last.Author.Gender == "female")
+dffm <- df %>% filter(First.Author.Gender == "male")
+dflm <- df %>% filter(Last.Author.Gender == "male")
+
+
+#Gender plots
+ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
+ggplot(df, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
+
+#How is the gender distribution in years (first author)?
+#these plots would be more informative if the bars were placed next to eachother, but I dont know how to do that, without specifying a y-axis. 
+
+ggplot(df, aes(x= Publication.Year, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+ggplot(df, aes(x= Publication.Year, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+```
+
+Removing NA's from Gender
+```{r}
+df <- df %>%
+  drop_na(First.Gender)
+
+df <- df %>%
+  drop_na(Last.Gender)
+
+df <- df %>%
+  drop_na(Faculty)
+```
+
+Cutting papers with more than 150citations for plotting
+```{r}
+df_cit150 <- df %>%
+  filter(Citations < 150)
+```
+
+
+```{r}
+ggplot(df_cit150, aes(Citations, fill =First.Gender)) + geom_density() + facet_wrap(~First.Gender)
+
+ggplot(df_cit150, aes(Citations, fill =Last.Gender)) + geom_density() + facet_wrap(~Last.Gender)
+
+ggplot(df_cit150, aes(Citations, fill =Sentiment)) + geom_density() + facet_wrap(~Sentiment)
+
+ggplot(df_cit150, aes(Citations, fill = Sentiment, color =Sentiment)) + geom_density( alpha=0.1) + facet_wrap(~First.Gender)
+```
+
+
+```{r}
+#first author sentiment 
+ggplot(df, aes(Sentiment, Citations, fill = First.Gender)) + geom_bar(position="dodge",  stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.2,position=position_dodge(0.9))
+
+#Last author sentiment
+ggplot(df, aes(Sentiment.label, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+
+
+#first author sentiment by faculty
+ggplot(df, aes(Sentiment, Citations, fill = First.Gender)) + geom_bar(position="dodge",  stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.2,position=position_dodge(0.9)) + facet_wrap(~Faculty)
+
+#Last author sentiment by faculty
+ggplot(df, aes(Sentiment.label, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single")) + facet_wrap(~Faculty)
+
+```
+
+
+
+```{r}
+#First author - confidence 
+ggplot(df, aes(First.Author.Gender, totalconfidence, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+#Faculty - confidence
+ggplot(df, aes(Faculty, totalconfidence, fill = Faculty)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5) + facet_wrap(~First.Author.Gender)
+
+#Last author - confidence
+ggplot(df, aes(Last.Author.Gender, totalconfidence, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+
+```
+```{r}
+ggplot(df, aes(Confidence, Citations, fill = First.Gender)) + geom_smooth(method = "lm")
+
+ggplot(df, aes(Confidence, Citations, fill = First.Gender)) + geom_smooth(method = "lm") + facet_wrap(~Faculty)
+
+```
+
+
+
+```{r}
+
+ggplot(df, aes(First.Author.Gender, LIX, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+ggplot(df, aes(x=First.Author.Gender, y=LIX, fill = First.Author.Gender))+labs(x ="Gender", y ="LIX")+geom_boxplot(width =0.5) +stat_summary(fun.y =mean, geom ="point", shape =23, colour ="Black")
+
+ggplot(df, aes(Last.Author.Gender, LIX, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
+
+```
+
+```{r}
+ggplot(df, aes(Publication.Year, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
+
+ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single")) + facet_wrap(~Publication.Year)
+
+```
+
+
+```{r}
+#plot showing mean citation count per year 
+ggplot(df, aes(Publication.Year, Times.Cited..All.Databases, fill= Publication.Year))+
+  geom_bar(stat = "summary", fun.y = mean) +
+  stat_summary(aes(label=round(..y..,2)), fun.y=mean, geom="text", size=4, vjust = -0.3)
 ```
 
 
