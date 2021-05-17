@@ -228,9 +228,13 @@ semifinaldf <- semifinaldf %>% distinct(Article.Title,.keep_all = TRUE)
 write.csv(semifinaldf, "semifinaldf.csv")
 ```
 
+Removing Abstracts with NA
+```{r}
+semifinaldf <- semifinaldf %>% filter(!is.na(Abstract))
+```
 
 
-Exploring the data
+Exploring research areas
 ```{r}
 
 semifinaldf <- read.csv("semifinaldf.csv")
@@ -244,9 +248,7 @@ semifinaldf <- semifinaldf %>%
     Last.Author.Gender = as.factor(Last.Author.Gender)
   )
 
-semifinaldf <- semifinaldf %>% filter(!is.na(Abstract))
-
-
+#finding only first mentioned research area
 
 semifinaldf <- semifinaldf %>%
   mutate(
@@ -268,5 +270,245 @@ semifinaldf <- semifinaldf %>%
 write.csv(semifinaldf, "semifinaldf.csv")
 
 
+```
+
+```{r}
+#Loading the "clean" data with NA removed and summarized areas of research 
+
+df <- read_csv("semifinaldf.csv")
+
+#Removing extra (X) columns from download 
+#df <- df[, -c(1:2)] #delete column 5
+
+
+#How many research areas do we have
+df$Research.Areas <- as.factor(df$Research.Areas)
+levels(df$Research.Areas)
+
+#We still have 142 different categories, which would we like to seperate into Faculties equivalent to Aarhus university. 
+
+Area_df <- df %>% select(Research.Areas )
+
+Area_df <- unique(Area_df, incomparables = FALSE)
+Area_df <- Area_df %>% filter(!is.na(Research.Areas))
+
+write_csv(Area_df, "Area_of_research.csv") 
+
+df2 <- read_delim("Area_of_research_2.csv", delim = ";", col_names = TRUE,col_types = NULL)
+
+#The df2 now contains a specification of which faculty each Area of Research has.
+
+#No idea why the renaming does not work 
+names(df2)[names(df2) == "`Faculty `"] <- "Faculty"
+names(df2)[names(df2) == "`Area `"] <- "Area"
+
+#the plot shows how reserach areas are seperated into faculties       
+ggplot(df2, aes(`Faculty `, fill= `Faculty `))+ geom_bar()
+```
+
+
+```{r}
+#Further data cleaning to assign faculty to each research area 
+
+###MESSY DATA CLEANING TO ASSIGN EACH RESEARCH AREA TO A FACULTY. 
+##Dont run this again - just load the df_w_faculty.csv - it has been cleaned 
+
+
+#Create a new column in df where faculty should be listed - I created df test to ensure im not messing with our so far clean data 
+
+df_test <- df 
+
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Religion" 
+                                            |Research.Areas == "Anthropology"|Research.Areas == "Area Studies" 
+                                            |Research.Areas == "Public Administarion"
+                                            |Research.Areas == "Cultural studies" 
+                                            |Research.Areas == "Communication"
+                                            |Research.Areas == "Philosophy"
+                                            |Research.Areas == "Education"
+                                            |Research.Areas == "Linguistics" 
+                                            |Research.Areas == "Social Sciences - Other Topics"
+                                            |Research.Areas == "History"
+                                            |Research.Areas == "Mathematical Methods In Social Sciences"
+                                            |Research.Areas == "Art" 
+                                            |Research.Areas == "Film"
+                                            |Research.Areas == "Ethnic studies"
+                                            |Research.Areas == "Instruments" 
+                                            |Research.Areas == "Music"
+                                            |Research.Areas == "Literature"
+                                            |Research.Areas == "Theater" 
+                                            |Research.Areas == "Socail Issues"
+                                            |Research.Areas == "Sociology"
+                                            |Research.Areas == "History" 
+                                            |Research.Areas == "Archaeology"
+                                            |Research.Areas == "Information Sciences"
+                                            |Research.Areas == "Arts" 
+                                            |Research.Areas == "Classics"
+                                            |Research.Areas == "Women's Studies"
+                                            |Research.Areas == "Asian Studies", 'a', ""))
+
+
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Business"
+                          |Research.Areas == "Government"
+                          |Research.Areas == "Behavioral Sciences" 
+                                            |Research.Areas == "Materials Science"
+                                            |Research.Areas == "Psychology"
+                                            |Research.Areas == "Public" 
+                                            |Research.Areas == "Demography"
+                                            |Research.Areas == "Criminology"
+                                            |Research.Areas == "Development Studies"
+                                            |Research.Areas == "Substance Abuse"
+                                            |Research.Areas == "Family Studies"
+                                            |Research.Areas == "Social Work"
+                                            |Research.Areas == "Urban Studies", 'b', Faculty))
+
+
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Chemistry"
+                                            |Research.Areas == "Elctrochemistry"
+                                            |Research.Areas == "Geology" 
+                                            |Research.Areas == "Plant Sciences"
+                                            |Research.Areas == "Genetics"
+                                            |Research.Areas == "Science" 
+                                            |Research.Areas == "Microbiology"
+                                            |Research.Areas == "Physics"
+                                            |Research.Areas == "Research"
+                                            |Research.Areas == "Polymer Science"
+                                            |Research.Areas == "Astronomy"
+                                            |Research.Areas == "Physical Geography"
+                                            |Research.Areas == "Computer Science" 
+                                            |Research.Areas == "Marine"
+                                            |Research.Areas == "Biodiversity" 
+                                            |Research.Areas == "Construction"
+                                            |Research.Areas == "Meteorology"
+                                            |Research.Areas == "Energy"
+                                            |Research.Areas == "Mathematics"
+                                            |Research.Areas == "Biotechnology"
+                                            |Research.Areas == "Physical Geography"
+                                            |Research.Areas == "Mycology"
+                                            |Research.Areas == "Geography"
+                                            |Research.Areas == "Cell Biology"
+                                            |Research.Areas == "Oceanography" 
+                                            |Research.Areas == "Evolutionary Biology"
+                                            |Research.Areas == "Thermodynamics"
+                                            |Research.Areas == "Mathematical"
+                                            |Research.Areas == "Nuclear Science"
+                                            |Research.Areas == "Developmental Biology"
+                                            |Research.Areas == "Reproductive Biology"
+                                            |Research.Areas == "Imaging Science"
+                                            |Research.Areas == "Crystalllography",
+                                            'n', Faculty))
+
+
+df_test <- mutate(df_test, Faculty = ifelse(Research.Areas== "Biohemistry"
+                                            |Research.Areas == "Forestry"	
+                                            |Research.Areas == "Telecommunications" 
+                                            |Research.Areas == "Agriculture"
+                                            |Research.Areas == "Environmental Sciences"
+                                            |Research.Areas == "Engineering"			
+                                            |Research.Areas == "Life Sciences"
+                                            |Research.Areas == "Geochemistry"
+                                            |Research.Areas == "Zoology"
+                                            |Research.Areas == "Veterinary Sciences"
+                                            |Research.Areas == "Entomology"
+                                            |Research.Areas == "Nutrition"
+                                            |Research.Areas == "Mechanics" 
+                                            |Research.Areas == "Food Science"
+                                            |Research.Areas == "Automation" 
+                                            |Research.Areas == "Fisheries"
+                                            |Research.Areas == "Biophysics"
+                                            |Research.Areas == "Remote Sensing"
+                                            |Research.Areas == "Acoustics"
+                                            |Research.Areas == "Robotics"
+                                            |Research.Areas == "Water Resources"
+                                            |Research.Areas == "Architecture",
+                                            't', Faculty))
+
+#Adding the faculty h (health) on all the Articles that haven't been assigned another faculty. 
+df_test <- mutate(df_test, Faculty = ifelse(Faculty == "",
+                                            'h', Faculty))
+
+
+
+#Write csv so we don't have to run this mess again
+
+write_csv(df_test, "df_w_faculty.csv") 
+
+```
+
+
+```{r}
+#Replacing Author Names that were not gender indentified with a probability above 0.7 with NA 
+
+#Do we have the gender of all Authors - and how sure was Genderize 
+
+df <- read_csv("df_w_faculty.csv") 
+ggplot(df, aes(x = as.numeric(First.Author.Gender.Probability)))+
+  geom_histogram(aes(y=..density..))
+
+ggplot(df_gender_last, aes(x = as.numeric(Last.Author.Gender.Probability)))+
+  geom_histogram(aes(y=..density..))
+
+#QUOESTION- should we remove the papers where genderize isn't super sure? 
+#Remember that just because it is unsure about first author gender then it isn't unsure about last author, so a lot of data we are possibly throwing away. It also has a hard time on Asian names. And i can see that it classifies Andrea as male, Janne as male and Kim as female just as an example. 
+
+
+#Finding the cases where both first and last author have below 0.70 probability for correct gender identification
+
+df_gender <- df %>%  filter(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70)
+
+#removing them from our data 
+
+df <- df %>% filter(!(First.Author.Gender.Probability < 0.70 & Last.Author.Gender.Probability < 0.70))
+
+#Finding how many cases where either first or last author gender probability is below 0.70
+
+df_gender_last <- df %>% filter(Last.Author.Gender.Probability < 0.70)
+
+df_gender_last <- df_gender_last %>% select(c(Last.Author.Name, Last.Author.Gender.Probability,Last.Author.Gender))
+
+df_gender_first <- df %>% filter(First.Author.Gender.Probability < 0.70)
+
+
+df_gender_first <- df_gender_first %>% select(c(First.Author.Name, First.Author.Gender.Probability,First.Author.Gender))
+
+
+
+#Replacing genders with low probability with NA 
+
+df<- df %>% mutate(First.Author.Gender = ifelse(First.Author.Gender.Probability < 0.70, NA, First.Author.Gender))
+df<- df %>% mutate(Last.Author.Gender = ifelse(Last.Author.Gender.Probability < 0.70, NA, Last.Author.Gender))
+
+
+
+```
+
+Abstract lengths of characters
+```{r}
+library(stringr)
+library(dplyr)
+
+#Counting words in each abstract
+df <- df %>% 
+  mutate(wordcount = str_count(df$Abstract, pattern = "\\w+"))
+
+#we have abstracts with 8 words and 922/939 words 
+range(df$wordcount)
+
+#The histogram shows the distribution of abstract lengths - shows that it makes sense to have a max length of 500 for our BERT as the tail is very long
+ggplot(df, aes(x = as.numeric(wordcount)))+
+  geom_histogram(aes(y=..density..))
+#Super thin tail on our distribution - so we remove articles with more than 500 words. 
+
+df <- df %>% filter(wordcount< 500)
+
+#How many papers do we have?
+# We have 8134 Articles 
+
+length(df$Article.Title) 
+
+```
+
+writing csv ready for sentiment analysis
+```{r}
+write_csv(df, "df_ready_BERT.csv") 
 ```
 
