@@ -111,108 +111,8 @@ Predictors:
 - Faculty
 
 
-```{r}
-set.seed(1234)
 
-f4 <- bf(Citations ~ 0 +  Confidence : Sentiment : First.Gender : Last.Gender + (0 + Confidence : Sentiment : First.Gender : Last.Gender | Faculty))
-
-
-get_prior(f4, data = df, family = negbinomial())
-
-
-f4_prior <- c(
-  prior(lkj(2), class = cor),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Gendermale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Gendermale:Last.Genderfemale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Gendermale:Last.Gendermale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Gendermale),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale),
-  prior(normal(0, 0.1), class = sd),
-  prior(gamma(0.01, 0.01), class = shape))
-
-
-
-m4_prior <- brm(
-  f4,
-  data = df,
-  family = negbinomial(),
-  prior = f4_prior,
-  sample_prior = 'only',
-  backend = "cmdstanr",
-  chains = 2,
-  cores = 2
-)
-
-
-
-pp_check(m4_prior, nsamples = 100)
-
-
-
-```
-
-```{r}
-set.seed(1234)
-m4_post <- brm(
-  f4,
-  data = df,
-  family = negbinomial(),
-  prior = f4_prior,
-  sample_prior = T,
-  backend = "cmdstanr",
-  chains = 2,
-  cores = 2
-)
-
-pp_check(m4_post, nsamples = 100)
-
-summary(m4_post)
-
-stanplot(m4_post)
-
-plot(m4_post)
-
-mean(rnbinom(1.e4, exp(0.08), prob = 0.5))
-
-```
-
-```{r}
-
-mcmc_trace(m4_post,  pars = "b_Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale", "b_Confidence:SentimentNEGATIVE:First.Gendermale:Last.Genderfemale") + theme_classic()
-
-mcmc_rank_overlay(m4_post, pars = "b_Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale", "b_Confidence:SentimentNEGATIVE:First.Gendermale:Last.Genderfemale") + theme_classic()
-
-
-
-#Plot of estimates
-mcmc_plot(m4_post)
-#Hypothesis testing
-hypothesis(m4_post, "Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale < Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale")
-#Posterior update check
-plot(hypothesis(m4_post, "Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale > Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale"))
-
-mcmc_trace(m4_post)
-
-#no valid effect detected from plots below
-plot(conditional_effects(m4_post), point=T)
-
-conditional_effects(m4_post)
-
-```
-
-
-#With year
+#With year and four way interaction for portfolio
 
 
 ```{r}
@@ -265,38 +165,215 @@ df$preds <- predict(m5_prior,summary = T) [1,]
 
 ggplot(df, aes(preds)) + geom_density()
 
- pp_check(m4_prior, nsamples = 100)
+pp_check(m5_prior, nsamples = 100)
 
 
 
 ```
 
 ```{r}
-m4_post <- brm(
-  f4,
+m5_post <- brm(
+  f5,
   data = df,
   family = negbinomial(),
-  prior = f4_prior,
+  prior = f5_prior,
   sample_prior = T,
   backend = "cmdstanr",
   chains = 2,
-  cores = 2,
-  file ="m4_post",
-  file_refit = "on_change"
+  cores = 2
 )
 
-pp_check(m4_post, nsamples = 100)
+pp_check(m5_post, nsamples = 100)
 
-summary(m4_post)
+summary(m5_post)
 
-stanplot(m4_post)
+stanplot(m5_post)
 
-plot(m4_post)
+mcmc_plot(m5_post, pars = "^b_")
 
-mean(rnbinom(1.e4, exp(-0.06), prob = 0.1))
+plot(m5_post)
+
+#
+pacman:: p_load(MASS)
+
+mean(rnegbin(1.e4, mu = exp(0.19), theta = 0.57))
+
+#Hypothesis testing
+hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0")
+
+#Posterior update check
+plot(hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0"))
 
 ```
 
+#Doing seperate models for sentiment and confidence
+
+```{r}
+set.seed(1234)
+
+f1 <- bf(Citations ~ 0 + Year + Sentiment : First.Gender : Last.Gender + (0 + Sentiment : First.Gender : Last.Gender | Faculty))
+
+
+get_prior(f1, data = df, family = negbinomial())
+
+
+f1_prior <- c(
+  prior(normal(0, 0.2), class = b, 
+        coef = Year),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale ),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentNEGATIVE:First.Genderfemale:Last.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentNEGATIVE:First.Gendermale:Last.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentNEGATIVE:First.Gendermale:Last.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentPOSITIVE:First.Genderfemale:Last.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentPOSITIVE:First.Gendermale:Last.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef = SentimentPOSITIVE:First.Gendermale:Last.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m1_prior <- brm(
+  f1,
+  data = df,
+  family = negbinomial(),
+  prior = f1_prior,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2,
+  file = "m5_prior"
+)
+
+
+#Prior predictive check - do not run - produces NAs
+#pp_check(m1_prior, nsamples = 100)
+
+
+
+```
+
+```{r}
+m1_post <- brm(
+  f1,
+  data = df,
+  family = negbinomial(),
+  prior = f1_prior,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m1_post, nsamples = 100)
+
+summary(m1_post)
+
+stanplot(m1_post)
+
+mcmc_plot(m1_post, pars = "^b_")
+
+plot(m1_post)
+
+#
+pacman:: p_load(MASS)
+
+mean(rnegbin(1.e4, mu = exp(0.19), theta = 0.57))
+
+#Hypothesis testing
+hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0")
+
+#Posterior update check
+plot(hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0"))
+
+```
+
+
+```{r}
+set.seed(1234)
+
+f2 <- bf(Citations ~ 0 + Year +  Confidence : First.Gender : Last.Gender + (0 + Confidence : First.Gender : Last.Gender | Faculty))
+
+
+get_prior(f2, data = df, family = negbinomial())
+
+
+f2_prior <- c(
+  prior(normal(0, 0.2), class = b, 
+        coef = Year),
+  prior(normal(0, 0.2), class = b, 
+        coef = Confidence:First.Genderfemale:Last.Genderfemale ),
+  prior(normal(0, 0.2), class = b, 
+        coef =  Confidence:First.Genderfemale:Last.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = Confidence:First.Gendermale:Last.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef = Confidence:First.Gendermale:Last.Gendermale),
+  prior(normal(0, 0.1), class = sd))
+
+
+
+m2_prior <- brm(
+  f2,
+  data = df,
+  family = negbinomial(),
+  prior = f2_prior,
+  sample_prior = 'only',
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2,
+  file = "m5_prior"
+)
+
+
+
+pp_check(m2_prior, nsamples = 100)
+
+
+
+```
+
+```{r}
+m2_post <- brm(
+  f2,
+  data = df,
+  family = negbinomial(),
+  prior = f2_prior,
+  sample_prior = T,
+  backend = "cmdstanr",
+  chains = 2,
+  cores = 2
+)
+
+pp_check(m2_post, nsamples = 100)
+
+summary(m2_post)
+
+stanplot(m2_post)
+
+mcmc_plot(m2_post, pars = "^b_")
+
+plot(m2_post)
+
+#
+pacman:: p_load(MASS)
+
+mean(rnegbin(1.e4, mu = exp(0.19), theta = 0.57))
+
+#Hypothesis testing
+hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0")
+
+#Posterior update check
+plot(hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0"))
+
+```
 
 
 

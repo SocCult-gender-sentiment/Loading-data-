@@ -158,6 +158,8 @@ ggplot(df, aes(Last.Author.Gender, totalconfidence, fill = Last.Author.Gender)) 
 
 
 ```
+
+
 ```{r}
 ggplot(df, aes(Confidence, Citations, fill = First.Gender)) + geom_smooth(method = "lm")
 
@@ -193,4 +195,7 @@ ggplot(df, aes(Publication.Year, Times.Cited..All.Databases, fill= Publication.Y
 ```
 
 
+```{r}
+
+```
 
