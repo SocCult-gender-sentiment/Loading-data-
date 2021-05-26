@@ -110,104 +110,9 @@ Predictors:
 - Year
 - Faculty
 
-
-
-#With year and four way interaction for portfolio
-
-
-```{r}
-set.seed(1234)
-
-f5 <- bf(Citations ~ 0 + Year +  Confidence : Sentiment : First.Gender : Last.Gender + (0 + Confidence : Sentiment : First.Gender : Last.Gender | Faculty))
-
-
-get_prior(f5, data = df, family = negbinomial())
-
-
-f5_prior <- c(
-  prior(normal(0, 0.2), class = b, 
-        coef = Year),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Genderfemale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Genderfemale:Last.Gendermale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Gendermale:Last.Genderfemale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentNEGATIVE:First.Gendermale:Last.Gendermale ),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Genderfemale),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Genderfemale:Last.Gendermale),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale),
-  prior(normal(0, 0.2), class = b, 
-        coef = Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale),
-  prior(normal(0, 0.1), class = sd))
-
-
-
-m5_prior <- brm(
-  f5,
-  data = df,
-  family = negbinomial(),
-  prior = f5_prior,
-  sample_prior = 'only',
-  backend = "cmdstanr",
-  chains = 2,
-  cores = 2,
-  file = "m5_prior"
-)
-
-
-
-df$preds <- predict(m5_prior,summary = T) [1,]
-
-ggplot(df, aes(preds)) + geom_density()
-
-pp_check(m5_prior, nsamples = 100)
-
-
-
-```
-
-```{r}
-m5_post <- brm(
-  f5,
-  data = df,
-  family = negbinomial(),
-  prior = f5_prior,
-  sample_prior = T,
-  backend = "cmdstanr",
-  chains = 2,
-  cores = 2
-)
-
-pp_check(m5_post, nsamples = 100)
-
-summary(m5_post)
-
-stanplot(m5_post)
-
-mcmc_plot(m5_post, pars = "^b_")
-
-plot(m5_post)
-
-#
-pacman:: p_load(MASS)
-
-mean(rnegbin(1.e4, mu = exp(0.19), theta = 0.57))
-
-#Hypothesis testing
-hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0")
-
-#Posterior update check
-plot(hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0"))
-
-```
-
 #Doing seperate models for sentiment and confidence
 
+Sentiment
 ```{r}
 set.seed(1234)
 
@@ -280,26 +185,26 @@ stanplot(m1_post)
 
 mcmc_plot(m1_post, pars = "^b_")
 
-plot(m1_post)
+plot(m1_post, pars = "^b_")
 
 #
 pacman:: p_load(MASS)
 
-mean(rnegbin(1.e4, mu = exp(0.19), theta = 0.57))
+mean(rnegbin(1.e4, mu = exp(-0.21), theta = 0.59))
 
 #Hypothesis testing
-hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0")
+hypothesis(m1_post, "SentimentPOSITIVE:First.Gendermale:Last.Gendermale - SentimentPOSITIVE:First.Gendermale:Last.Genderfemale > 0")
 
 #Posterior update check
-plot(hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0"))
+plot(hypothesis(m1_post, "SentimentPOSITIVE:First.Gendermale:Last.Gendermale - SentimentPOSITIVE:First.Genderfemale:Last.Gendermale > 0"))
 
 ```
 
-
+Confidence
 ```{r}
 set.seed(1234)
 
-f2 <- bf(Citations ~ 0 + Year +  Confidence : First.Gender : Last.Gender + (0 + Confidence : First.Gender : Last.Gender | Faculty))
+f2 <- bf(Citations ~ 0 + Year +  First.Gender : Last.Gender + Confidence : First.Gender : Last.Gender + (0 + Confidence : First.Gender : Last.Gender | Faculty))
 
 
 get_prior(f2, data = df, family = negbinomial())
@@ -309,13 +214,21 @@ f2_prior <- c(
   prior(normal(0, 0.2), class = b, 
         coef = Year),
   prior(normal(0, 0.2), class = b, 
-        coef = Confidence:First.Genderfemale:Last.Genderfemale ),
+        coef = First.Genderfemale:Last.Genderfemale ),
   prior(normal(0, 0.2), class = b, 
-        coef =  Confidence:First.Genderfemale:Last.Gendermale),
+        coef = First.Genderfemale:Last.Genderfemale:Confidence ),
   prior(normal(0, 0.2), class = b, 
-        coef = Confidence:First.Gendermale:Last.Genderfemale),
+        coef = First.Genderfemale:Last.Gendermale),
   prior(normal(0, 0.2), class = b, 
-        coef = Confidence:First.Gendermale:Last.Gendermale),
+        coef = First.Genderfemale:Last.Gendermale:Confidence),
+  prior(normal(0, 0.2), class = b, 
+        coef = First.Gendermale:Last.Genderfemale),
+  prior(normal(0, 0.2), class = b, 
+        coef =  First.Gendermale:Last.Genderfemale:Confidence),
+  prior(normal(0, 0.2), class = b, 
+        coef = First.Gendermale:Last.Gendermale),
+  prior(normal(0, 0.2), class = b, 
+        coef = First.Gendermale:Last.Gendermale:Confidence),
   prior(normal(0, 0.1), class = sd))
 
 
@@ -360,18 +273,18 @@ stanplot(m2_post)
 
 mcmc_plot(m2_post, pars = "^b_")
 
-plot(m2_post)
+plot(m2_post, pars = "^b_")
 
 #
 pacman:: p_load(MASS)
 
-mean(rnegbin(1.e4, mu = exp(0.19), theta = 0.57))
+mean(rnegbin(1.e4, mu = exp(0.11), theta = 0.57))
 
 #Hypothesis testing
-hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0")
+hypothesis(m2_post, "First.Genderfemale:Last.Genderfemale:Confidence-First.Genderfemale:Last.Gendermale:Confidence  > 0")
 
 #Posterior update check
-plot(hypothesis(m5_post, "Confidence:SentimentPOSITIVE:First.Gendermale:Last.Genderfemale - Confidence:SentimentPOSITIVE:First.Gendermale:Last.Gendermale > 0"))
+plot(hypothesis(m2_post, "First.Genderfemale:Last.Genderfemale:Confidence > 0"))
 
 ```
 
