@@ -2,8 +2,6 @@
 title: "Exploring"
 output: html_document
 ---
-#### WARNING ######
-The documnet is extremly messy and the code is anything but elegant - I think Riccardo would poke his eyes out if he ever sees this... sry 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -26,10 +24,21 @@ pacman::p_load(tidyverse,
 ```{r}
 #load data 
 
-df <- read_csv("df_lix_sentiment.csv")
+df <- read_csv("df_lix_sentiment_confidence.csv")
 
 ```
 
+Removing NA's from Gender
+```{r}
+df <- df %>%
+  drop_na(First.Gender)
+
+df <- df %>%
+  drop_na(Last.Gender)
+
+df <- df %>%
+  drop_na(Faculty)
+```
 
 
 ```{r}
@@ -38,7 +47,6 @@ df <- read_csv("df_lix_sentiment.csv")
 #How is the gender distribution in general (first author)?
 
 ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
-
 
 #How is the gender distribution in general (last author)?
 #Comment for the plot. it is interesting to see that there is a lot more male last authors, indicating that many of the head of departments are male. There is an increase in male last authors compared to male first authors and the female authors is in outnumbered in both conditions. 
@@ -60,10 +68,7 @@ ggplot(df, aes(x = Publication.Year, fill = Last.Author.Gender)) +
 #Abstract sentences 
 #We are moving into the realm of NLP maybe we should leave that for Python :-) 
 
-##Research areas  
-#Don't know what the NA is doing in there :-) 
-#Would be possible to make some cool plots with gender ditribution within each faculty.
-
+##Faculties  
 
 ggplot(df, aes(x = Faculty, fill = Faculty)) + 
   geom_bar()
@@ -75,7 +80,6 @@ ggplot(df, aes(x = Faculty, fill = Faculty)) +
 
 
 ```{r}
-
 
 #Exploring gender distribution 
 dfff <- df %>% filter(First.Author.Gender == "female")
@@ -89,7 +93,6 @@ ggplot(df, aes(First.Author.Gender, fill = First.Author.Gender)) + geom_bar()
 ggplot(df, aes(Last.Author.Gender, fill = Last.Author.Gender)) + geom_bar()
 
 #How is the gender distribution in years (first author)?
-#these plots would be more informative if the bars were placed next to eachother, but I dont know how to do that, without specifying a y-axis. 
 
 ggplot(df, aes(x= Publication.Year, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
 
@@ -97,17 +100,6 @@ ggplot(df, aes(x= Publication.Year, fill = Last.Author.Gender)) + geom_bar(posit
 
 ```
 
-Removing NA's from Gender
-```{r}
-df <- df %>%
-  drop_na(First.Gender)
-
-df <- df %>%
-  drop_na(Last.Gender)
-
-df <- df %>%
-  drop_na(Faculty)
-```
 
 Cutting papers with more than 150citations for plotting
 ```{r}
@@ -117,12 +109,16 @@ df_cit150 <- df %>%
 
 
 ```{r}
+#Citations and first gender
 ggplot(df_cit150, aes(Citations, fill =First.Gender)) + geom_density() + facet_wrap(~First.Gender)
 
+#Citations and last gender
 ggplot(df_cit150, aes(Citations, fill =Last.Gender)) + geom_density() + facet_wrap(~Last.Gender)
 
+#Citations and Sentiment
 ggplot(df_cit150, aes(Citations, fill =Sentiment)) + geom_density() + facet_wrap(~Sentiment)
 
+#Citationes and sentiment in color
 ggplot(df_cit150, aes(Citations, fill = Sentiment, color =Sentiment)) + geom_density( alpha=0.1) + facet_wrap(~First.Gender)
 ```
 
@@ -133,8 +129,6 @@ ggplot(df, aes(Sentiment, Citations, fill = First.Gender)) + geom_bar(position="
 
 #Last author sentiment
 ggplot(df, aes(Sentiment.label, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
-
-
 
 #first author sentiment by faculty
 ggplot(df, aes(Sentiment, Citations, fill = First.Gender)) + geom_bar(position="dodge",  stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.2,position=position_dodge(0.9)) + facet_wrap(~Faculty)
@@ -161,7 +155,7 @@ ggplot(df, aes(Last.Author.Gender, totalconfidence, fill = Last.Author.Gender)) 
 
 
 ```{r}
-ggplot(df, aes(Confidence, Citations, fill = First.Gender)) + geom_smooth(method = "lm")
+#Citations for first gender in each faculty
 
 ggplot(df, aes(Confidence, Citations, fill = First.Gender)) + geom_smooth(method = "lm") + facet_wrap(~Faculty)
 
@@ -169,19 +163,12 @@ ggplot(df, aes(Confidence, Citations, fill = First.Gender)) + geom_smooth(method
 
 
 
-```{r}
-
-ggplot(df, aes(First.Author.Gender, LIX, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
-
-ggplot(df, aes(x=First.Author.Gender, y=LIX, fill = First.Author.Gender))+labs(x ="Gender", y ="LIX")+geom_boxplot(width =0.5) +stat_summary(fun.y =mean, geom ="point", shape =23, colour ="Black")
-
-ggplot(df, aes(Last.Author.Gender, LIX, fill = Last.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"), stat='summary', fun.y=mean) + geom_errorbar(stat='summary', fun.data=mean_se, width=0.5)
-
-```
 
 ```{r}
+#year and first author
 ggplot(df, aes(Publication.Year, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single"))
 
+#Sentiment and first author
 ggplot(df, aes(Sentiment.label, fill = First.Author.Gender)) + geom_bar(position=position_dodge(preserve = "single")) + facet_wrap(~Publication.Year)
 
 ```
@@ -194,8 +181,187 @@ ggplot(df, aes(Publication.Year, Times.Cited..All.Databases, fill= Publication.Y
   stat_summary(aes(label=round(..y..,2)), fun.y=mean, geom="text", size=4, vjust = -0.3)
 ```
 
-
 ```{r}
+With the clean dataframe and final models
+
+dfplot <- read.csv("df_lix_sentiment_confidence.csv")
+
+dfplot <- dfplot %>%
+  mutate(
+    Title = as.factor(Article.Title),
+    Last.Gender = as.factor(Last.Author.Gender),
+    First.Gender = as.factor(First.Author.Gender),
+    Sentiment = as.factor(label),
+    Faculty = as.factor(Faculty),
+    Citations = as.numeric(Times.Cited..All.Databases),
+    Year = as.numeric(Publication.Year),
+    Confidence = as.numeric(totalconfidence)
+    
+  )
+
+
+dfplot <- dfplot %>%
+  select(
+    Title,
+    Last.Gender,
+    First.Gender,
+    Sentiment,
+    Faculty,
+    Citations,
+    Year,
+    Confidence
+  )
+
 
 ```
+
+
+Removing NA's from Gender
+```{r}
+df <- df %>%
+  drop_na(First.Gender)
+
+df <- df %>%
+  drop_na(Last.Gender)
+
+```
+
+
+```{r}
+#making new varaible with first and last gender collapsed 
+dfplot <- dfplot %>%
+  mutate(
+    BothGender = paste0(First.Gender, Last.Gender))
+
+dfplot <- dfplot %>%
+  mutate(
+    BothGender = as.factor(BothGender))
+
+```
+
+Renaming variables
+```{r}
+#renaming variables
+dfplot <- dfplot %>%
+  mutate(
+    First.Author.Gender = First.Gender,
+    Order.of.Gender = BothGender
+    
+  )
+
+#renaming levels
+dfplot <- dfplot %>%
+  mutate(
+    First.Author.Gender = revalue(First.Author.Gender, c("female"="First author female", "male"="First author male")))
+
+
+```
+
+
+
+Sentiment plot
+```{r}
+ggplot(dfplot, aes(x = Sentiment, y = Citations, fill = First.Gender)) + 
+  geom_bar(position="dodge", stat='summary', fun.y=mean) +  geom_errorbar(stat='summary', 
+                fun.data=mean_se, width=0.2, position=position_dodge(0.9))
+
+
+ggplot(dfplot, aes(x = Sentiment, y = Citations, fill = Last.Gender)) + 
+  geom_bar(position="dodge", stat='summary', fun.y=mean) +  geom_errorbar(stat='summary', 
+                fun.data=mean_se, width=0.2, position=position_dodge(0.9))
+
+
+ggplot(dfplot, aes(x = Sentiment, y = Citations, fill = Order.of.Gender)) + 
+  geom_bar(position="dodge", stat='summary', fun.y=mean) +  geom_errorbar(stat='summary', 
+                fun.data=mean_se, width=0.2, position=position_dodge(0.9)) + facet_wrap( ~ First.Author.Gender) + scale_fill_brewer(palette="PuOr") + theme_classic()
+
+
+```
+
+
+
+Confidence plot
+```{r}
+ggplot(df, aes(Confidence, Citations , color = First.Gender)) + geom_smooth(method = "lm") + facet_wrap(~ Faculty)
+ggplot(df, aes(Confidence, Citations , color = Last.Gender)) + geom_smooth(method = "lm") + facet_wrap(~ Faculty)
+
+
+#adding both first and last author, but coloring does not work. With it be nice to make a variable showing first+last gender in same
+ggplot(df) + 
+  geom_smooth(aes(Confidence, Citations, color = First.Gender), method = "lm", alpha = 0) +
+  scale_color_manual(values=c("female" = "green",
+                             "male" = "cyan",
+                             "NA" = "black"),
+                    name = "first author") +
+  geom_smooth(aes(Confidence, Citations, color = Last.Gender), method = "lm", alpha = 0) +
+  scale_color_manual(values=c("female" = "red",
+                             "male" = "blue",
+                             "NA" = "black"),
+                      name = "last author")
+
+
+#nice nok plot
+ggplot(dfplot) + 
+  geom_smooth(aes(Confidence, Citations, color = Order.of.Gender), method = "lm", alpha = 0.1) + facet_wrap(~First.Author.Gender) + scale_color_brewer(palette="PuOr") + theme_classic()
+#First female and last female get a waaaay higher slope than first female and last male, however last male have a higher intercept
+#Firsr male and last male have a positive interaction when increasing centiment, however this is opposite for male first, female last
+
+```
+
+
+
+
+Making estimates from model 1 - sentiment - called m1_post in analysis.Rmd
+```{r}
+mydatabsent <- dfplot
+
+mydatabsent <- cbind(mydatabsent, fitted(m1_post, mydatabsent, re_formula=NA))
+
+mydatabsent <- mydatabsent %>%
+  drop_na(Estimate)
+
+mydatabsent <- mydatabsent %>%
+  mutate(
+    Estimate.rneg = mean(rnegbin(1.e4, mu = exp(Estimate), theta = 0.57))
+  )
+```
+
+Plotting estimates
+```{r}
+ggplot(mydatabsent, aes(x = Sentiment, y = Estimate, fill = Order.of.Gender)) + 
+  geom_bar(position="dodge", stat='summary', fun.y=mean) +  geom_errorbar(stat='summary', 
+                fun.data=mean_se, width=0.2, position=position_dodge(0.9)) + facet_wrap( ~ First.Author.Gender) + scale_fill_brewer(palette="PuOr") + theme_classic()
+
+```
+
+
+Making estimates from model 2 - confidence - called m2_post in analysis.Rmd
+```{r}
+mydatabcon <- dfplot
+
+mydatabcon <- cbind(mydatabcon, fitted(m2_post, mydatabcon, re_formula=NA))
+
+mydatabcon <- mydatabcon %>%
+  drop_na(Estimate)
+
+```
+
+
+Plotting estimates
+```{r}
+ggplot(mydatabcon) + 
+  geom_smooth(aes(Confidence, Estimate, color = Order.of.Gender, ymin = Q2.5, ymax = Q97.5, stat = "identity"), method = "lm", alpha = 0.1) + facet_wrap(~First.Author.Gender) + scale_color_brewer(palette="PuOr") + theme_classic()
+```
+
+
+Looking at year and it predicted estimates
+```{r}
+ggplot(dfplot, aes(x = Year, y = Citations)) + geom_smooth(method = "lm") + scale_color_brewer(palette="PuOr") + theme_classic()
+
+ggplot(mydatabsent, aes(x = Year, y = Estimate)) + geom_smooth(method = "lm") + scale_color_brewer(palette="PuOr") + theme_classic()
+
+ggplot(mydatabcon, aes(x = Year, y = Estimate)) + geom_smooth(method = "lm") + scale_color_brewer(palette="PuOr") + theme_classic()
+
+```
+
 
